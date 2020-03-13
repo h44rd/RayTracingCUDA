@@ -17,6 +17,7 @@
 
 #include <iostream>
 #include <math.h>
+#include "Vector3.h"
 
 /*  Function: main
 //
@@ -33,5 +34,12 @@
 
 int main(int argc, char *argv[]) {
     
+    Vector3 a(1, 2, 3);
+    Vector3 b(5, 6, 7);
+
+    Vector3 c = a * b;
+
+    std::cout<<c<<std::endl;
+
     return 0;
 }

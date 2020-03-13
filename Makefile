@@ -15,10 +15,10 @@ INCS = Vector3.h
 render: render.o
 	$(NVCC) $(NVCCFLAGS) $(GENCODE_FLAGS) -o render render.o
 
-cudart.o: $(SRCS) $(INCS)
-	$(NVCC) $(NVCCFLAGS) $(GENCODE_FLAGS) -o cudart.o -c main.cu
+render.o: $(SRCS) $(INCS)
+	$(NVCC) $(NVCCFLAGS) $(GENCODE_FLAGS) -o render.o -c main.cu
 
-out.ppm: cudart
+out.ppm: render
 	rm -f out.ppm
 	./cudart > out.ppm
 
@@ -26,12 +26,12 @@ out.jpg: out.ppm
 	rm -f out.jpg
 	ppmtojpeg out.ppm > out.jpg
 
-profile_basic: cudart
-	nvprof ./cudart > out.ppm
+profile_basic: render
+	nvprof ./render > out.ppm
 
 # use nvprof --query-metrics
-profile_metrics: cudart
-	nvprof --metrics achieved_occupancy,inst_executed,inst_fp_32,inst_fp_64,inst_integer ./cudart > out.ppm
+profile_metrics: render
+	nvprof --metrics achieved_occupancy,inst_executed,inst_fp_32,inst_fp_64,inst_integer ./render > out.ppm
 
 clean:
-	rm -f cudart cudart.o out.ppm out.jpg
+	rm -f render render.o out.ppm out.jpg
