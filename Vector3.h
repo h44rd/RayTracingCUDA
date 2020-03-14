@@ -1,8 +1,7 @@
 #ifndef VECTOR3H
 #define VECTOR3H
 
-class Vector3
-{
+class Vector3 {
     private:
 
     public:
@@ -39,8 +38,7 @@ class Vector3
 
 __host__ __device__ Vector3::Vector3() {}
 
-__host__ __device__ Vector3::Vector3(float x, float y, float z)
-{
+__host__ __device__ Vector3::Vector3(float x, float y, float z) {
     members[0] = x;
     members[1] = y;
     members[2] = z;

@@ -1,0 +1,44 @@
+// ----------------------------------------------------------------------------------------------------
+// 
+// 	File name: VisibleObject.h
+//	Created By: Haard Panchal
+//	Create Date: 03/14/2020
+//
+//	Description:
+//		File has the definition and implementation of the VisibleObject class
+//      
+//      Pure Abstract Class for Visible Objects (Any Renderable object)
+//
+//      IMP: Function getIntersectInfo has to be overridden by derived classes
+//
+//	History:
+//		03/13/19: H. Panchal Created the file
+//
+//  Declaration:
+//      N/A
+//
+// ----------------------------------------------------------------------------------------------------
+
+#ifndef VISIBLEOBJECTH
+#define VISIBLEOBJECTH
+
+#include "Vector3.h"
+#include "Ray.h"
+
+class VisibleObject
+{
+private:
+    
+public:
+    __host__ __device__ VisibleObject();
+    __host__ __device__ ~VisibleObject();
+
+    // The function will return a Vector3 with x : Parameter t, y : slope of hit, z : yet to be decided (-1)
+    __host__ __device__ virtual Vector3 getIntersectInfo(Ray incoming) const = 0;
+};
+
+VisibleObject::VisibleObject() {}
+
+VisibleObject::~VisibleObject() {}
+
+#endif
