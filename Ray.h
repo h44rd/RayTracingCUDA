@@ -61,5 +61,6 @@ __host__ __device__ inline Vector3 Ray::getPoint(float t) const {
     return p_0 + t * n; // Returns the point calculated using the passed paramter
 }
 
+__host__ __device__ Ray::~Ray() {}
 
 #endif

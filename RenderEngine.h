@@ -36,7 +36,12 @@ class RenderEngine
         __host__ __device__ RenderEngine(int width, int height, World& world_p);
         __host__ __device__ ~RenderEngine();
 
-        __host__ __device__ void render(int i, int j); //Renders the pixel i,j
+        __host__ __device__ Vector3 render(float u, float v); //Renders the point u,v on the screen (0 <= u,v <= 1)
+        __host__ __device__ Vector3 computeColor(VisibleObject* closest_object, Ray& eye_ray, Vector3& t); // Compute color given the closest object
+
+        __host__ __device__ Vector3 renderPixel(int i, int j); // Renders the pixel i,j
+
+        __host__ __device__ void renderAllPixels();
 
         World* world;
         Camera* camera;
@@ -46,15 +51,12 @@ __host__ __device__ RenderEngine::RenderEngine() {}
 
 __host__ __device__ RenderEngine::RenderEngine(int width, int height, World& world_p) : w(width), h(height) {
     world = &world_p;
-    camera = world.getCamera();
+    camera = world->getCamera();
 }
 
 __host__ __device__ RenderEngine::~RenderEngine() {}
 
-__host__ __device__ Vector3 RenderEngine::render(int i, int j) {
-    float u = ((float) i)/((float) w);
-    float v = ((float) h - j)/((float) h); // Pixel cordinates have the origin on top left but our screen origin is on the bottom left
-
+__host__ __device__ Vector3 RenderEngine::render(float u, float v) {
     Ray eye_ray = camera->getRay(u, v);
 
     int total_objects = world->getTotalVisibleObjects();
@@ -68,7 +70,7 @@ __host__ __device__ Vector3 RenderEngine::render(int i, int j) {
     for(int i = 0; i < total_objects; i++) {
         
         intersectInfo = (world->getVisibleObject(i))->getIntersectInfo(eye_ray);
-        
+        std::cout<<intersectInfo<<std::endl;
         if( !if_t_encountered && intersectInfo[2] > 0.0f) {
             if_t_encountered = true;
             min_t = intersectInfo[0];
@@ -88,6 +90,73 @@ __host__ __device__ Vector3 RenderEngine::render(int i, int j) {
     if( !if_t_encountered ) {
         return Vector3(0.0, 0.0, 0.0); // Default color
     }
+    
+    Vector3 point_of_intersection = eye_ray.getPoint(min_t);
+    return computeColor(closest_object, eye_ray, point_of_intersection);
 }
 
+/*  Function: computeColor
+//
+//  The function computes the diffuse, specular (for now) color using the ray and normal information
+//
+//  Parameters:
+//      VisibleObject* closest_object: The closest object intersecting the ray
+//      Ray& eye_ray: The ray
+//      Vector3& point_of_intersection: The point of intersection of ray and the object
+//     
+//	Return:
+//      Vector3 color
+*/
+__host__ __device__ Vector3 RenderEngine::computeColor(VisibleObject* closest_object, Ray& eye_ray, Vector3& point_of_intersection) {
+    Vector3 light_direction = -1.0f * (world->light);
+    light_direction.make_unit_vector();
+
+    Vector3 normal = closest_object->getNormalAtPoint(point_of_intersection);
+    normal.make_unit_vector();
+
+    Vector3 eye = -1.0f * (eye_ray.getDirection());
+    eye.make_unit_vector();
+
+    float diffuse_intensity = max(0.0f, dot(normal, light_direction));
+
+    Vector3 reflection = -light_direction + 2.0f * dot(light_direction, normal) * normal;
+    float specular_intensity = max(0.0f, dot(eye, reflection));
+    
+    Vector3 object_color = closest_object->getColor(point_of_intersection);
+
+    Vector3 final_object_color = diffuse_intensity * object_color;
+    final_object_color = specular_intensity * object_color + (1.0f - specular_intensity) * final_object_color;
+
+    return final_object_color;
+}
+
+__host__ __device__ Vector3 RenderEngine::renderPixel(int i, int j)  {
+    float u = ((float) i)/((float) w);
+    float v = ((float) h - j)/((float) h); // Pixel cordinates have the origin on top left but our screen origin is on the bottom left
+
+    return render(u, v);
+}
+
+__host__ __device__ void RenderEngine::renderAllPixels() {
+    Vector3 color_ij(0.0, 0.0, 0.0);
+    // Output FB as Image
+    std::cout << "P3\n" << w << " " << h << "\n255\n";
+    for (int i = 0; i < w; i++) {
+        for (int j = 0; j < h; j++) {
+            color_ij = renderPixel(i, j);
+            // std::cout<<color_ij<<std::endl;
+            int ir = int(255.99*color_ij.r());
+            int ig = int(255.99*color_ij.g());
+            int ib = int(255.99*color_ij.b());
+            // std::cout << ir << " " << ig << " " << ib << "\n";
+        }
+    }
+}
+
+__host__ __device__ float max(float& a, float& b) {
+    if(a > b) {
+        return a;
+    }
+    return b;
+}
 #endif

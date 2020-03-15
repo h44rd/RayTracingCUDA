@@ -27,6 +27,7 @@
 #include "Sphere.h"
 #include "Plane.h"
 
+#include "RenderEngine.h"
 /*  Function: main
 //
 //	Parses the argument list. Initializes the relevant objects and starts rendering.
@@ -42,27 +43,35 @@
 
 int main(int argc, char *argv[]) {
     
-    Vector3 a(1, 2, 3);
-    Vector3 b(5, 6, 7);
-
-    Vector3 c = b;
-
-    std::cout<<c<<std::endl;
-    std::cout<<dot(a,c)<<std::endl;
-
-    Vector3 color(1, 1, 1);
+    Vector3 color1(1.0f, 0.5f, 1.0f);
+    Vector3 color2(0.5f, 1.0f, 0.25f);
 
     Vector3 center(0.0, 1.0, 2.0);
     float r = 10.0f;
-    Sphere s(center, r, color);
+    Sphere s(center, r, color1);
 
     Vector3 point(2.0, 3.0, 5.0);
     Vector3 normal(-1, -1, -1);
-    Plane p(point, normal, color);
+    Plane p(point, normal, color2);
+
+    Vector3 positioncam(0.0, 0.0, -5.0);
+    Vector3 direction = center - positioncam;
+    Vector3 updir(0.0, 1.0, 0.0);
+    Camera cam(positioncam, direction, updir, 1.0, 1.0, 1.0);
+
+    Vector3 light(1.0f,1.0f,1.0f);
+    light.make_unit_vector();
 
     World w;
     w.addVisibleObject(&s);
     w.addVisibleObject(&p);
+    w.setCamera(cam);
+    w.setLight(light);
+
+    int wid = 1200, hgt = 1200;
+    RenderEngine r_engine(wid, hgt, w);
+
+    r_engine.renderAllPixels();
 
     return 0;
 }
