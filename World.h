@@ -44,12 +44,13 @@ class World
 
         __host__ __device__ inline int getTotalVisibleObjects() { return total_objects; }
 
-        __host__ __device__ VisibleObject* getItem(int i) const;
+        __host__ __device__ VisibleObject* getVisibleObject(int i) const;
 
         // Camera
         __host__ __device__ inline void setCamera(Camera& camera_p) { camera = &camera_p; }
         __host__ __device__ inline Camera* getCamera() { return camera; }
 
+        //Light
         __host__ __device__ inline void setLight(Vector3& light_p) { light = light_p; }
         Vector3 light; // Coming soon: LIIIGGGGGTTTTHHHH CLLLLAAASSSSS
 };
@@ -67,7 +68,7 @@ __host__ __device__ void World::addVisibleObject(VisibleObject* new_visible_obje
     total_objects++;
 }
 
-__host__ __device__ VisibleObject* World::getNextItem(int i) const {
+__host__ __device__ VisibleObject* World::getVisibleObject(int i) const {
     if(i < total_objects) {
         return visible_objects[i];
     } 

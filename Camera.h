@@ -83,7 +83,7 @@ Camera::~Camera() {}
 //   TODO
 */
 __host__ __device__ inline Ray Camera::getRay(float u, float v) const {
-    return Ray(p_e, (p_00 + (u * n_0) + (v * n_1)) - p_e);
+    return Ray(p_e, (p_00 + (u * n_0 * s_x) + (v * n_1 * s_y)) - p_e);
 }
 
 #endif
