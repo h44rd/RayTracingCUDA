@@ -27,18 +27,28 @@
 
 class VisibleObject
 {
-private:
-    
-public:
-    __host__ __device__ VisibleObject();
-    __host__ __device__ ~VisibleObject();
+    private:
+        
+    public:
+        __host__ __device__ VisibleObject();
+        __host__ __device__ ~VisibleObject();
 
-    // The function will return a Vector3 with x : Parameter t, y : slope of hit, z : yet to be decided (-1)
-    __host__ __device__ virtual Vector3 getIntersectInfo(Ray incoming) const = 0;
+        // The function will return a Vector3 with x : Parameter t, y : slope of hit, z : yet to be decided (-1)
+        // Thought: We could also return the normal vector
+        __host__ __device__ virtual Vector3 getIntersectInfo(const Ray& incoming) const = 0;
+
+        __host__ __device__ virtual Vector3 getNormalAtPoint(Vector3& point) const;  
+
+        __host__ __device__ virtual Vector3 getColor(Vector3& point) const;
+
 };
 
-VisibleObject::VisibleObject() {}
+__host__ __device__ VisibleObject::VisibleObject() {}
 
-VisibleObject::~VisibleObject() {}
+__host__ __device__ VisibleObject::~VisibleObject() {}
+
+__host__ __device__ Vector3 VisibleObject::getNormalAtPoint(Vector3& point) const { return Vector3(0.0f, 0.0f, 0.0f); }
+
+__host__ __device__ Vector3 VisibleObject::getColor(Vector3& point) const { return Vector3(0.0f, 0.0f, 0.0f); }
 
 #endif

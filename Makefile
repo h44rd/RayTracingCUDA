@@ -10,7 +10,7 @@ NVCCFLAGS      = $(NVCC_DBG) -m64
 GENCODE_FLAGS  = -gencode arch=compute_50,code=sm_50
 
 SRCS = main.cu
-INCS = Vector3.h
+INCS = Vector3.h Ray.h VisibleObject.h World.h Sphere.h Plane.h
 
 render: render.o
 	$(NVCC) $(NVCCFLAGS) $(GENCODE_FLAGS) -o render render.o
