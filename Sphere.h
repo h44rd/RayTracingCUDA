@@ -33,25 +33,25 @@ class Sphere : public VisibleObject {
         Vector3 c_0;
     
     public:
-        __host__ __device__ Sphere();
-        __host__ __device__ Sphere(Vector3& center, float radius, Vector3& color);
-        __host__ __device__ ~Sphere();
+        __host__ Sphere();
+        __host__ Sphere(Vector3& center, float radius, Vector3& color);
+        __host__ ~Sphere();
 
         // The function will return a Vector3 with x : Parameter t, y : slope of hit, z : if hit (+ve if hit, -ve otherwise)
-        __host__ __device__ Vector3 getIntersectInfo(const Ray& incoming) const;
+        __host__ Vector3 getIntersectInfo(const Ray& incoming) const;
 
         // The normal to the sphere 
-        __host__ __device__ Vector3 getNormalAtPoint(Vector3& point) const { return point - p_c; }
+        __host__ Vector3 getNormalAtPoint(Vector3& point) const { return (point - p_c)/r; }
 
         // The color
-        __host__ __device__ Vector3 getColor(Vector3& point) const { return c_0; }
+        __host__ Vector3 getColor(Vector3& point) const { return c_0; }
 };
 
-__host__ __device__ Sphere::Sphere() {}
+__host__ Sphere::Sphere() {}
 
-__host__ __device__ Sphere::Sphere(Vector3& center, float radius, Vector3& color) : p_c(center), r(radius), c_0(color) {}
+__host__ Sphere::Sphere(Vector3& center, float radius, Vector3& color) : p_c(center), r(radius), c_0(color) {}
 
-__host__ __device__ Sphere::~Sphere() {}
+__host__ Sphere::~Sphere() {}
 
 /*  Function: getIntersectInfo for sphere
 //
@@ -67,8 +67,14 @@ __host__ __device__ Sphere::~Sphere() {}
 //   v.y = dot product (intensity) of ray with normal at the point
 //   v.z = if intersection happened
 */
-__host__ __device__ Vector3 Sphere::getIntersectInfo(const Ray& incoming) const {
+__host__ Vector3 Sphere::getIntersectInfo(const Ray& incoming) const {
     Vector3 intersection(0.0f, 0.0f, 0.0f);
+
+    #ifdef DEBUG
+    std::cout<<"Ray direction: "<<incoming.getDirection()<<std::endl;
+    std::cout<<"Ray starting point: "<<incoming.getStartingPoint()<<std::endl;
+    std::cout<<"Sphere center: "<<incoming.getStartingPoint() - p_c<<std::endl;
+    #endif
 
     float a = 1.0f;
     
@@ -89,6 +95,12 @@ __host__ __device__ Vector3 Sphere::getIntersectInfo(const Ray& incoming) const 
         t = -1.0;
         ifIntersect = -1.0;
     }
+    #ifdef DEBUG
+    std::cout<<"c: "<<c<<std::endl;
+    std::cout<<"b: "<<b<<std::endl;
+    std::cout<<"Discriminant: "<<discriminant<<std::endl;
+    std::cout<<"Sphere t: "<<t<<std::endl;
+    #endif
     intersection[0] = t;
     intersection[2] = ifIntersect;
 

@@ -34,40 +34,48 @@ class Plane : public VisibleObject {
         Vector3 c_0; // Color of the sphere {{{{COMING SOON: ***MATERIALS***}}}}
 
     public:
-        __host__ __device__ Plane();
-        __host__ __device__ Plane(Vector3& normal, Vector3& point, Vector3& color);
-        __host__ __device__ ~Plane();
+        __host__ Plane();
+        __host__ Plane(Vector3& normal, Vector3& point, Vector3& color);
+        __host__ ~Plane();
 
         // The function will return a Vector3 with x : Parameter t, y : slope of hit, z : if hit (+ve if hit, -ve otherwise)
-        __host__ __device__ Vector3 getIntersectInfo(const Ray& incoming) const;
+        __host__ Vector3 getIntersectInfo(const Ray& incoming) const;
 
         // The normal to the plane
-        __host__ __device__ Vector3 getNormalAtPoint(Vector3& point) const { return n_0; }
+        __host__ Vector3 getNormalAtPoint(Vector3& point) const { return n_0; }
 
-        __host__ __device__ Vector3 getColor(Vector3& point) const { return c_0; }
+        __host__ Vector3 getColor(Vector3& point) const { return c_0; }
 };
 
-__host__ __device__ Plane::Plane() {}
+__host__ Plane::Plane() {}
 
-__host__ __device__ Plane::Plane(Vector3& normal, Vector3& point, Vector3& color) : p_i(point), c_0(color) {
+__host__ Plane::Plane(Vector3& normal, Vector3& point, Vector3& color) : p_i(point), c_0(color) {
     n_0 = normal;
     n_0.make_unit_vector();
 }
 
-__host__ __device__ Plane::~Plane() {}
+__host__ Plane::~Plane() {}
 
-__host__ __device__ Vector3 Plane::getIntersectInfo(const Ray& incoming) const {
+__host__ Vector3 Plane::getIntersectInfo(const Ray& incoming) const {
     Vector3 intersection(0.0f, 0.0f, 0.0f);
 
     float slope = dot(incoming.getDirection(), n_0);
     float t = 0.0f;
     float ifIntersect = 0.0f;
 
-    if(abs(slope) > 0.00001f) {
-        t = (dot(p_i, n_0) - dot(incoming.getStartingPoint(), n_0)) / slope;
+    bool ifAngled = false;
+
+    if(abs(slope) > 0.000001f) {
+        t = dot(p_i - incoming.getStartingPoint(), n_0) / slope;
+        ifAngled = true;
     } 
+
+    #ifdef DEBUG
+    std::cout<<"Plane t: "<<t<<std::endl;
+    std::cout<<"Slope: "<<slope<<std::endl;
+    #endif
     
-    if(t >= 0.0f) {
+    if(t >= 0.0f && ifAngled) {
         ifIntersect = 1.0f;
     } else {
         ifIntersect = -1.0f;
