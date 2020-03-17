@@ -34,6 +34,8 @@
 #include "DirectionalLight.h"
 
 #include "RenderEngine.h"
+
+
 /*  Function: main
 //
 //	Parses the argument list. Initializes the relevant objects and starts rendering.
@@ -46,7 +48,6 @@
 //	Return:
 //		int: 0 if successful
 */
-
 int main(int argc, char *argv[]) {
     
     Vector3 color1(1.0f, 0.5f, 1.0f);
@@ -60,7 +61,7 @@ int main(int argc, char *argv[]) {
     Sphere s(center, r, color1);
 
     Vector3 center2(0.5, 0.5, 0.0);
-    float r2 = .5f;
+    float r2 = .25f;
     Sphere s2(center2, r2, color4);
 
     Vector3 center3(0.5, -0.5, 0.0);
@@ -80,12 +81,12 @@ int main(int argc, char *argv[]) {
     Plane p3(normal3, point3, color5);
 
     Vector3 positioncam(0.0, 0.0, 5.0);
-    Vector3 direction = - positioncam;
+    Vector3 lookat(0.0f, 0.0f, 0.0f);
+    Vector3 direction = lookat - positioncam;
     Vector3 updir(0.0, 1.0, 0.0);
     Camera cam(positioncam, direction, updir, 1.0, 1.0, 1.0);
 
-    Vector3 lightpos(0.5f,0.7f,3.0f); // Position of the light
-    // light.make_unit_vector();
+    Vector3 lightpos(0.0f, .5f, 3.0f); // Position of the light
     PointLight pointlight(lightpos);
 
     Vector3 lightdir(-1.0f, -1.0f, -1.0f);
@@ -106,6 +107,7 @@ int main(int argc, char *argv[]) {
     int wid = 1200, hgt = 1200;
     RenderEngine r_engine(wid, hgt, w);
 
+    // r_engine.setSharpEdge(0.4, 0.6);
     r_engine.renderAllPixels();
 
     return 0;

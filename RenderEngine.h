@@ -25,12 +25,14 @@
 #include "Camera.h"
 #include "Ray.h"
 #include "VisibleObject.h"
+#include "Helpers.h"
 
 class RenderEngine
 {
     private:
         int w, h;
 
+        float sharp_edge0, sharp_edge1;
     public:
         __host__ RenderEngine();
         __host__ RenderEngine(int width, int height, World& world_p);
@@ -43,6 +45,7 @@ class RenderEngine
 
         __host__ void renderAllPixels();
 
+        __host__ void inline setSharpEdge(float edge0, float edge1) {sharp_edge0 = edge0; sharp_edge1 = edge1;}
         World* world;
         Camera* camera;
 };
@@ -52,6 +55,8 @@ __host__ RenderEngine::RenderEngine() {}
 __host__ RenderEngine::RenderEngine(int width, int height, World& world_p) : w(width), h(height) {
     world = &world_p;
     camera = world->getCamera();
+    sharp_edge0 = 0.0;
+    sharp_edge1 = 1.0;
 }
 
 __host__ RenderEngine::~RenderEngine() {}
@@ -129,6 +134,7 @@ __host__ Vector3 RenderEngine::computeColor(VisibleObject* closest_object, Ray& 
     eye.make_unit_vector();
 
     float diffuse_intensity = max(0.0f, dot(normal, light_direction));
+    diffuse_intensity = smoothstep(sharp_edge0, sharp_edge1, diffuse_intensity);
 
     #ifdef RENDERDEBUG
     std::cout<<"Point of intersection: "<<point_of_intersection<<std::endl;
@@ -143,6 +149,8 @@ __host__ Vector3 RenderEngine::computeColor(VisibleObject* closest_object, Ray& 
     reflection.make_unit_vector();
     float specular_intensity = max(0.0f, dot(eye, reflection));
     
+    specular_intensity = smoothstep(sharp_edge0, sharp_edge1, specular_intensity);
+
     Vector3 object_color = closest_object->getColor(point_of_intersection);
 
     Vector3 final_object_color = diffuse_intensity * object_color;
