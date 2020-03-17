@@ -22,16 +22,20 @@
 
 #include "VisibleObject.h"
 #include "Camera.h"
+#include "Light.h"
 
 class World
 {
     private:
         VisibleObject** visible_objects;
-
         int total_objects;
         int current_index;
 
         Camera * camera;
+        
+        Light ** lights;
+        int total_lights;
+        int light_id;
 
     public:
         __host__ __device__ World();
@@ -51,14 +55,23 @@ class World
         __host__ __device__ inline Camera* getCamera() { return camera; }
 
         //Light
-        __host__ __device__ inline void setLight(Vector3& light_p) { light = light_p; }
-        Vector3 light; // Coming soon: LIIIGGGGGTTTTHHHH CLLLLAAASSSSS
+        __host__ __device__ inline void addLight(Light* light_p);
+        __host__ __device__ inline int getTotalLights() { return total_lights; }
+        __host__ __device__ Light * getLight(int i) const;
+        __host__ __device__ inline void setLightId(int i) { if(i < total_lights) light_id = i; }
+        __host__ __device__ inline int getSelectedLightId() { return light_id; }
+
+        // Vector3 light; // Coming soon: LIIIGGGGGTTTTHHHH CLLLLAAASSSSS
+
 };
 
 __host__ __device__ World::World() {
     visible_objects = new VisibleObject * [100];
+    lights = new Light * [100];
     total_objects = 0;
+    total_lights = 0;
     current_index = 0;
+    light_id = 0;
 }
 
 __host__ __device__ World::~World() {}
@@ -72,6 +85,18 @@ __host__ __device__ VisibleObject* World::getVisibleObject(int i) const {
     if(i < total_objects) {
         return visible_objects[i];
     } 
+    return NULL;
+}
+
+__host__ __device__ void World::addLight(Light * new_light) {
+    lights[total_lights] = new_light;
+    total_lights++;
+}
+
+__host__ __device__ Light * World::getLight(int i) const {
+    if(i < total_lights) {
+        return lights[i];
+    }
     return NULL;
 }
 
