@@ -71,12 +71,12 @@ int main(int argc, char *argv[]) {
     float r3 = .5f;
     Sphere s3(center3, r3, color4);
 
-    Vector3 point(0.0, -1.0, 0.0);
-    Vector3 normal(0, 0.7, 0.1);
+    Vector3 point(0.0, -2.5, 0.0);
+    Vector3 normal(0, 1.0, 0.0);
     Plane p(normal, point, color2);
 
-    Vector3 point2(1.0, 0.0, 0.0);
-    Vector3 normal2(-0.7, -0.3, 0.1);
+    Vector3 point2(0.0, 2.5, 0.0);
+    Vector3 normal2(0.0, -1.0, 0.0);
     Plane p2(normal2, point2, color3);
 
     Vector3 point3(0.0, 1.0, 0.0);
@@ -95,26 +95,36 @@ int main(int argc, char *argv[]) {
     Vector3 lightdir(-1.0f, -1.0f, -1.0f);
     DirectionalLight dirLight(lightdir);
 
-    float beam_angle = 20.0;
-    float falloff_angle = 10.0;
+    float beam_angle = 10.0;
+    float falloff_angle = 30.0;
     beam_angle = beam_angle * PI / 180.0;
     falloff_angle = falloff_angle * PI / 180.0;
-    Vector3 spotlightpos(-0.3, 0.25, 4.0f);
+    Vector3 spotlightpos(-0.3, 0.25, 5.0f);
     Vector3 spotlightdir = -spotlightpos;
     SpotLight spotlight(spotlightpos, spotlightdir, beam_angle, falloff_angle);
 
     World w;
-    w.addVisibleObject(&s);
-    w.addVisibleObject(&s2);
-    w.addVisibleObject(&s3);
+    // w.addVisibleObject(&s);
+    // w.addVisibleObject(&s2);
+    // w.addVisibleObject(&s3);
     w.addVisibleObject(&p);
     w.addVisibleObject(&p2);
-    w.addVisibleObject(&p3);
+    // w.addVisibleObject(&p3);
     w.setCamera(cam);
     w.addLight(&pointlight); // Light id 0
     w.addLight(&dirLight); // Light id 1
     w.addLight(&spotlight); // Light id 2
-    w.setLightId(1);
+    w.setLightId(2);
+
+    float segment = 20.0;
+    float radius_circle = 2.0f;
+    for(int i = 0; i < 360; i += segment) {
+        float angle = i * PI / 180.0;
+        Vector3* color_each = new Vector3(abs(sin(angle)), abs(cos(angle)), abs(sin(angle) * cos(angle)));
+        Vector3* pos = new Vector3(radius_circle* sin(angle), radius_circle * cos(angle), 0.0);
+        Sphere * sphere = new Sphere(*pos, 0.3, *color_each);
+        w.addVisibleObject(sphere);
+    }
 
     int wid = 1200, hgt = 1200;
     RenderEngine r_engine(wid, hgt, w);
