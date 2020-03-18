@@ -33,6 +33,8 @@ class RenderEngine
         int w, h;
 
         float sharp_edge0, sharp_edge1;
+
+        float ambient_intensity;
     public:
         __host__ RenderEngine();
         __host__ RenderEngine(int width, int height, World& world_p);
@@ -57,6 +59,7 @@ __host__ RenderEngine::RenderEngine(int width, int height, World& world_p) : w(w
     camera = world->getCamera();
     sharp_edge0 = 0.0;
     sharp_edge1 = 1.0;
+    ambient_intensity = 0.3;
 }
 
 __host__ RenderEngine::~RenderEngine() {}
@@ -156,6 +159,7 @@ __host__ Vector3 RenderEngine::computeColor(VisibleObject* closest_object, Ray& 
     Vector3 final_object_color = diffuse_intensity * object_color;
     final_object_color = specular_intensity * object_color + (1.0f - specular_intensity) * final_object_color;
 
+    final_object_color = ambient_intensity * object_color + (1 - ambient_intensity) * final_object_color;
     return final_object_color;
 }
 
@@ -194,10 +198,10 @@ __host__ void RenderEngine::renderAllPixels() {
     }
 }
 
-__host__ float max(float& a, float& b) {
-    if(a > b) {
-        return a;
-    }
-    return b;
-}
+// __host__ float max(float& a, float& b) {
+//     if(a > b) {
+//         return a;
+//     }
+//     return b;
+// }
 #endif

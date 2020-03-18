@@ -1,6 +1,8 @@
 #ifndef HELPERSH
 #define HELPERSH
 
+#define PI 3.1415927
+
 __host__ float clamp(float x, float high, float low);
 __host__ float smoothstep(float edge0, float edge1, float x);
 

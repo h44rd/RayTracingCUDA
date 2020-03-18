@@ -32,6 +32,7 @@
 #include "Plane.h"
 #include "PointLight.h"
 #include "DirectionalLight.h"
+#include "SpotLight.h"
 
 #include "RenderEngine.h"
 
@@ -49,6 +50,8 @@
 //		int: 0 if successful
 */
 int main(int argc, char *argv[]) {
+
+    // const float PI = 3.1415927;
     
     Vector3 color1(1.0f, 0.5f, 1.0f);
     Vector3 color2(0.5f, 1.0f, 0.25f);
@@ -92,6 +95,14 @@ int main(int argc, char *argv[]) {
     Vector3 lightdir(-1.0f, -1.0f, -1.0f);
     DirectionalLight dirLight(lightdir);
 
+    float beam_angle = 20.0;
+    float falloff_angle = 10.0;
+    beam_angle = beam_angle * PI / 180.0;
+    falloff_angle = falloff_angle * PI / 180.0;
+    Vector3 spotlightpos(-0.3, 0.25, 4.0f);
+    Vector3 spotlightdir = -spotlightpos;
+    SpotLight spotlight(spotlightpos, spotlightdir, beam_angle, falloff_angle);
+
     World w;
     w.addVisibleObject(&s);
     w.addVisibleObject(&s2);
@@ -100,9 +111,10 @@ int main(int argc, char *argv[]) {
     w.addVisibleObject(&p2);
     w.addVisibleObject(&p3);
     w.setCamera(cam);
-    w.addLight(&pointlight);
-    w.addLight(&dirLight);
-    w.setLightId(0);
+    w.addLight(&pointlight); // Light id 0
+    w.addLight(&dirLight); // Light id 1
+    w.addLight(&spotlight); // Light id 2
+    w.setLightId(1);
 
     int wid = 1200, hgt = 1200;
     RenderEngine r_engine(wid, hgt, w);
