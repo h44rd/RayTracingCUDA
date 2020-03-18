@@ -23,9 +23,12 @@
 ![Change Screen distance](outputs/screendistance.jpg)
 
 ### Screen Size
-![Screen size](screensize.jpg)
+![Screen size](outputs/screensize.jpg)
 
 ### Sharp and soft diffuse/specular
-![Sharp](sharp.jpg)
-![Soft](soft.jpg)
+![Sharp](outputs/sharp.jpg)
+![Soft](outputs/soft.jpg)
 
+### Some other outputs
+![Pattern 1](outputs/pattern.jpg)
+![Pattern 2](outputs/pattern2.jpg)
