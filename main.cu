@@ -130,6 +130,7 @@ int main(int argc, char *argv[]) {
     RenderEngine r_engine(wid, hgt, w);
 
     // r_engine.setSharpEdge(0.4, 0.6);
+    r_engine.setBorder(true, 0.6);
     r_engine.renderAllPixels();
 
     return 0;

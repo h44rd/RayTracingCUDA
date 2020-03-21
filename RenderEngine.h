@@ -35,6 +35,9 @@ class RenderEngine
         float sharp_edge0, sharp_edge1;
 
         float ambient_intensity;
+
+        bool if_border;
+        float border_thinkness;
     public:
         __host__ RenderEngine();
         __host__ RenderEngine(int width, int height, World& world_p);
@@ -47,7 +50,9 @@ class RenderEngine
 
         __host__ void renderAllPixels();
 
-        __host__ void inline setSharpEdge(float edge0, float edge1) {sharp_edge0 = edge0; sharp_edge1 = edge1;}
+        __host__ inline void setSharpEdge(float edge0, float edge1) {sharp_edge0 = edge0; sharp_edge1 = edge1;}
+
+        __host__ void setBorder(bool border, float thickness) { if_border = border; border_thinkness = thickness; }
         World* world;
         Camera* camera;
 };
@@ -60,6 +65,9 @@ __host__ RenderEngine::RenderEngine(int width, int height, World& world_p) : w(w
     sharp_edge0 = 0.0;
     sharp_edge1 = 1.0;
     ambient_intensity = 0.3;
+
+    if_border = false;
+    border_thinkness = 0.6;
 }
 
 __host__ RenderEngine::~RenderEngine() {}
@@ -102,13 +110,6 @@ __host__ Vector3 RenderEngine::render(float u, float v) {
     
     Vector3 point_of_intersection = eye_ray.getPoint(min_t);
 
-    #ifdef RENDERDEBUG
-    std::cout<<"Eye ray starting point: "<<eye_ray.getStartingPoint()<<std::endl;
-    std::cout<<"Eye ray direction: "<<eye_ray.getDirection()<<std::endl;    
-    std::cout<<"t: "<<min_t<<std::endl;    
-    std::cout<<"Point of intersection: "<<point_of_intersection<<std::endl;
-    #endif
-
     return computeColor(closest_object, eye_ray, point_of_intersection);
 }
 
@@ -135,29 +136,50 @@ __host__ Vector3 RenderEngine::computeColor(VisibleObject* closest_object, Ray& 
     Vector3 eye = -1.0f * (point_of_intersection - eye_ray.getStartingPoint());
     eye.make_unit_vector();
 
+    // Computing Diffuse 
     float diffuse_intensity = max(0.0f, dot(normal, light_direction));
     diffuse_intensity = smoothstep(sharp_edge0, sharp_edge1, diffuse_intensity);
 
-    #ifdef RENDERDEBUG
-    std::cout<<"Point of intersection: "<<point_of_intersection<<std::endl;
-    std::cout<<"normal: "<<normal<<std::endl;
-    std::cout<<"light point: "<<world->light<<std::endl;
-    std::cout<<"light: "<<light_direction<<std::endl;
-    std::cout<<"Dot normal light: "<<dot(normal, light_direction)<<std::endl;
-    std::cout<<"Diffuse: "<<diffuse_intensity<<std::endl<<std::endl;
-    #endif
-
+    // Computing Specular
     Vector3 reflection = -light_direction + 2.0f * dot(light_direction, normal) * normal;
     reflection.make_unit_vector();
     float specular_intensity = max(0.0f, dot(eye, reflection));
     
     specular_intensity = smoothstep(sharp_edge0, sharp_edge1, specular_intensity);
 
+    // Computing border parameter
+
+    float border_intensity = 0;
+    if(if_border) {
+        border_intensity =  max(0.0f, 1.0f - abs(dot(normal, eye)));
+        border_intensity = smoothstep(border_thinkness, border_thinkness + 0.1, border_intensity);
+    } else {
+        border_intensity = 0;
+    }
+
+    // Computing the final color
+
     Vector3 object_color = closest_object->getColor(point_of_intersection);
 
     Vector3 final_object_color = diffuse_intensity * object_color;
     final_object_color = specular_intensity * object_color + (1.0f - specular_intensity) * final_object_color;
+    final_object_color = (1.0f - border_intensity) * final_object_color;
 
+    #ifdef RENDERDEBUG
+        if(border_intensity < 0.0 || border_intensity > 1.0) {
+        // std::cout<<"Point of intersection: "<<point_of_intersection<<std::endl;
+        std::cout<<"normal: "<<normal<<std::endl;
+        std::cout<<"View: "<<view_unit_vector<<std::endl;
+        // std::cout<<"light point: "<<world->light<<std::endl;
+        // std::cout<<"light: "<<light_direction<<std::endl;
+        // std::cout<<"Dot normal light: "<<dot(normal, light_direction)<<std::endl;
+        // std::cout<<"Diffuse: "<<diffuse_intensity<<std::endl;
+        std::cout<<"Dot: "<<dot(normal, view_unit_vector)<<std::endl;
+        std::cout<<"Border param: "<<border_intensity<<std::endl<<std::endl;
+    }
+    #endif
+
+    // Adding Ambient intensity
     final_object_color = ambient_intensity * object_color + (1 - ambient_intensity) * final_object_color;
     return final_object_color;
 }

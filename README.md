@@ -29,6 +29,9 @@
 ![Sharp](outputs/sharp.jpg)
 ![Soft](outputs/soft.jpg)
 
+### Border 
+![Border](outputs/border.jpg)
+
 ### Some other outputs
 ![Pattern 1](outputs/pattern.jpg)
 ![Pattern 2](outputs/pattern2.jpg)

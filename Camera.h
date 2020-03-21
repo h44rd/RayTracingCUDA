@@ -50,7 +50,8 @@ class Camera
         __host__ Camera(const Vector3& position, const Vector3& direction, const Vector3& up, float sx, float sy, float screen_distance);
         __host__ ~Camera();
 
-        __host__ inline Ray getRay(float u, float v) const; // Get the ray corresponding the u,v cordinates on the screen
+        __host__ Ray getRay(float u, float v) const; // Get the ray corresponding the u,v cordinates on the screen
+        __host__ inline Vector3 getUnitViewVector() const { return n_2; }
 };
 
 __host__ Camera::Camera() {}
