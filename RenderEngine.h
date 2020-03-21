@@ -125,8 +125,7 @@ __host__ Vector3 RenderEngine::render(float u, float v) {
 //      Vector3 color
 */
 __host__ Vector3 RenderEngine::computeColor(VisibleObject* closest_object, Ray& eye_ray, Vector3& point_of_intersection) {
-    // Vector3 light_direction = (point_of_intersection - world->light);
-    // light_direction.make_unit_vector();
+    
     Vector3 light_direction = (world->getLight(world->getSelectedLightId()))->getLightAtPoint(point_of_intersection);
     light_direction = -light_direction;
 
@@ -198,10 +197,4 @@ __host__ void RenderEngine::renderAllPixels() {
     }
 }
 
-// __host__ float max(float& a, float& b) {
-//     if(a > b) {
-//         return a;
-//     }
-//     return b;
-// }
 #endif

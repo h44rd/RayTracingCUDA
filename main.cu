@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
     float r2 = .25f;
     Sphere s2(center2, r2, color4);
 
-    Vector3 center3(0.5, -0.5, 0.0);
+    Vector3 center3(0.0, 0.0, 0.0);
     float r3 = .5f;
     Sphere s3(center3, r3, color4);
 
@@ -106,7 +106,7 @@ int main(int argc, char *argv[]) {
     World w;
     // w.addVisibleObject(&s);
     // w.addVisibleObject(&s2);
-    // w.addVisibleObject(&s3);
+    w.addVisibleObject(&s3);
     w.addVisibleObject(&p);
     w.addVisibleObject(&p2);
     // w.addVisibleObject(&p3);
