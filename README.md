@@ -11,7 +11,7 @@
 ![Point light 3](outputs/point3.jpg)
 
 ### Spot light
-![Spot light](spotlight.jpg)
+![Spot light](outputs/spotlight.jpg)
 
 ### Changing resolution
 ![Change resolution](outputs/resolution.jpg)
