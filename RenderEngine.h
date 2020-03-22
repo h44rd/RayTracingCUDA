@@ -127,25 +127,60 @@ __host__ Vector3 RenderEngine::render(float u, float v) {
 */
 __host__ Vector3 RenderEngine::computeColor(VisibleObject* closest_object, Ray& eye_ray, Vector3& point_of_intersection) {
     
-    Vector3 light_direction = (world->getLight(world->getSelectedLightId()))->getLightAtPoint(point_of_intersection);
-    light_direction = -light_direction;
+    int total_lights = world->getTotalLights();
 
     Vector3 normal = closest_object->getNormalAtPoint(point_of_intersection);
     normal.make_unit_vector();
 
+    Vector3 object_color = closest_object->getColor(point_of_intersection);
+
+    Vector3 final_object_color(0.0, 0.0, 0.0);
+    
     Vector3 eye = -1.0f * (point_of_intersection - eye_ray.getStartingPoint());
     eye.make_unit_vector();
 
-    // Computing Diffuse 
-    float diffuse_intensity = max(0.0f, dot(normal, light_direction));
-    diffuse_intensity = smoothstep(sharp_edge0, sharp_edge1, diffuse_intensity);
+    Vector3 reflection;
 
-    // Computing Specular
-    Vector3 reflection = -light_direction + 2.0f * dot(light_direction, normal) * normal;
-    reflection.make_unit_vector();
-    float specular_intensity = max(0.0f, dot(eye, reflection));
-    
-    specular_intensity = smoothstep(sharp_edge0, sharp_edge1, specular_intensity);
+    //Iterating through each light
+    for(int i = 0; i < total_lights; i++) {
+        Vector3 light_direction = (world->getLight(i))->getLightAtPoint(point_of_intersection);
+        light_direction = -light_direction;
+
+        // Computing Diffuse 
+        float diffuse_intensity = max(0.0f, dot(normal, light_direction));
+        diffuse_intensity = smoothstep(sharp_edge0, sharp_edge1, diffuse_intensity);
+
+        // Computing Specular
+        reflection = -light_direction + 2.0f * dot(light_direction, normal) * normal;
+        reflection.make_unit_vector();
+        float specular_intensity = max(0.0f, dot(eye, reflection));
+        
+        specular_intensity = smoothstep(sharp_edge0, sharp_edge1, specular_intensity);
+
+        // Computing the final color
+        Vector3 color_from_light;
+        color_from_light = diffuse_intensity * object_color;
+        color_from_light = specular_intensity * object_color + (1.0f - specular_intensity) * color_from_light;
+
+        // Adding the color to the final color
+        final_object_color += color_from_light;
+
+        #ifdef RENDERDEBUG
+            if(border_intensity < 0.0 || border_intensity > 1.0) {
+                // std::cout<<"Point of intersection: "<<point_of_intersection<<std::endl;
+                std::cout<<"normal: "<<normal<<std::endl;
+                std::cout<<"View: "<<view_unit_vector<<std::endl;
+                // std::cout<<"light point: "<<world->light<<std::endl;
+                // std::cout<<"light: "<<light_direction<<std::endl;
+                // std::cout<<"Dot normal light: "<<dot(normal, light_direction)<<std::endl;
+                // std::cout<<"Diffuse: "<<diffuse_intensity<<std::endl;
+                std::cout<<"Dot: "<<dot(normal, view_unit_vector)<<std::endl;
+                std::cout<<"Border param: "<<border_intensity<<std::endl<<std::endl;
+            }
+        #endif  
+    }
+
+    final_object_color = final_object_color / total_lights;
 
     // Computing border parameter
 
@@ -156,31 +191,11 @@ __host__ Vector3 RenderEngine::computeColor(VisibleObject* closest_object, Ray& 
     } else {
         border_intensity = 0;
     }
-
-    // Computing the final color
-
-    Vector3 object_color = closest_object->getColor(point_of_intersection);
-
-    Vector3 final_object_color = diffuse_intensity * object_color;
-    final_object_color = specular_intensity * object_color + (1.0f - specular_intensity) * final_object_color;
     final_object_color = (1.0f - border_intensity) * final_object_color;
-
-    #ifdef RENDERDEBUG
-        if(border_intensity < 0.0 || border_intensity > 1.0) {
-        // std::cout<<"Point of intersection: "<<point_of_intersection<<std::endl;
-        std::cout<<"normal: "<<normal<<std::endl;
-        std::cout<<"View: "<<view_unit_vector<<std::endl;
-        // std::cout<<"light point: "<<world->light<<std::endl;
-        // std::cout<<"light: "<<light_direction<<std::endl;
-        // std::cout<<"Dot normal light: "<<dot(normal, light_direction)<<std::endl;
-        // std::cout<<"Diffuse: "<<diffuse_intensity<<std::endl;
-        std::cout<<"Dot: "<<dot(normal, view_unit_vector)<<std::endl;
-        std::cout<<"Border param: "<<border_intensity<<std::endl<<std::endl;
-    }
-    #endif
 
     // Adding Ambient intensity
     final_object_color = ambient_intensity * object_color + (1 - ambient_intensity) * final_object_color;
+
     return final_object_color;
 }
 

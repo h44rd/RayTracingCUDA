@@ -32,6 +32,9 @@
 ### Border 
 ![Border](outputs/border.jpg)
 
+### Multiple Lights
+![Multiple Lights](outputs/multiple_lights.jpg)
+
 ### Some other outputs
 ![Pattern 1](outputs/pattern.jpg)
 ![Pattern 2](outputs/pattern2.jpg)
