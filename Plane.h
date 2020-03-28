@@ -34,29 +34,29 @@ class Plane : public VisibleObject {
         Vector3 c_0; // Color of the sphere {{{{COMING SOON: ***MATERIALS***}}}}
 
     public:
-        __host__ Plane();
-        __host__ Plane(Vector3& normal, Vector3& point, Vector3& color);
-        __host__ ~Plane();
+        __host__ __device__ Plane();
+        __host__ __device__ Plane(Vector3& normal, Vector3& point, Vector3& color);
+        __host__ __device__ ~Plane();
 
         // The function will return a Vector3 with x : Parameter t, y : slope of hit, z : if hit (+ve if hit, -ve otherwise)
-        __host__ Vector3 getIntersectInfo(const Ray& incoming) const;
+        __host__ __device__ Vector3 getIntersectInfo(const Ray& incoming) const;
 
         // The normal to the plane
-        __host__ Vector3 getNormalAtPoint(Vector3& point) const { return n_0; }
+        __host__ __device__ Vector3 getNormalAtPoint(Vector3& point) const { return n_0; }
 
-        __host__ Vector3 getColor(Vector3& point) const { return c_0; }
+        __host__ __device__ Vector3 getColor(Vector3& point) const { return c_0; }
 };
 
-__host__ Plane::Plane() {}
+__host__ __device__ Plane::Plane() {}
 
-__host__ Plane::Plane(Vector3& normal, Vector3& point, Vector3& color) : p_i(point), c_0(color) {
+__host__ __device__ Plane::Plane(Vector3& normal, Vector3& point, Vector3& color) : p_i(point), c_0(color) {
     n_0 = normal;
     n_0.make_unit_vector();
 }
 
-__host__ Plane::~Plane() {}
+__host__ __device__ Plane::~Plane() {}
 
-__host__ Vector3 Plane::getIntersectInfo(const Ray& incoming) const {
+__host__ __device__ Vector3 Plane::getIntersectInfo(const Ray& incoming) const {
     Vector3 intersection(0.0f, 0.0f, 0.0f);
 
     float slope = dot(incoming.getDirection(), n_0);

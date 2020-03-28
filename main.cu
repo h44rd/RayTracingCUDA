@@ -17,7 +17,7 @@
 // ----------------------------------------------------------------------------------------------------
 
 // #define RENDERDEBUG
-#define ACTUALRENDER
+// #define ACTUALRENDER
 // #define INITDEBUG
 
 #include <iostream>
@@ -37,6 +37,79 @@
 
 #include "RenderEngine.h"
 
+#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
+{
+   if (code != cudaSuccess) 
+   {
+      fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+      if (abort) exit(code);
+   }
+}
+
+
+/*  Function: initializeEngine
+//
+//	The function initializes the RenderEngine
+//  The function adds different object to World and passes World to the RenderEngine
+//
+//	Parameters:
+//  
+//		
+//		
+//	
+//	Return:
+//		int: 0 if successful
+*/
+__global__
+void initializeWorld(World * world) {
+    printf("Inside initialize >>>> Start\n");
+    Vector3 * color = new Vector3(1.0f, 0.5f, 1.0f);
+    Vector3 * center = new Vector3(-1.0, 0.0, 0.0);
+    float r = 1.0f;
+    Sphere * s = new Sphere(*center, r, *color);
+
+    world->addVisibleObject(s);
+
+    // float beam_angle = 10.0;
+    // float falloff_angle = 30.0;
+    // beam_angle = beam_angle * PI / 180.0;
+    // falloff_angle = falloff_angle * PI / 180.0;
+    // Vector3 * spotlightpos = new Vector3(-0.3, 0.25, 3.0f);
+    // Vector3 * spotlightdir = new Vector3();
+    // * spotlightdir = -1 * (*spotlightpos);
+    // SpotLight * spotlight = new SpotLight(* spotlightpos, * spotlightdir, beam_angle, falloff_angle);
+
+    // world->addLight(spotlight);
+
+    printf("Inside initialize >>>> End\n");
+}
+
+
+
+/*  Function: Parallelize Render for each pixels
+//
+//	The function parallelizes the render on the GPU
+//
+//	Parameters:
+//
+//		
+//		
+//	
+//	Return:
+//		int: 0 if successful
+*/
+__global__
+void renderPixels(RenderEngine * r_engine, Vector3 * frame_buffer, int w, int h) {
+    printf("Render >>> Start \n");
+    const int c = blockIdx.x * blockDim.x + threadIdx.x;
+    const int r = blockIdx.y * blockDim.y + threadIdx.y;
+    const int i = r * w + c;
+
+    frame_buffer[i] =  r_engine->renderPixel(r, c);
+    printf("framebuffer: %d %d %d\n", frame_buffer[i].r(), frame_buffer[i].g(), frame_buffer[i].b());
+}
+
 
 /*  Function: main
 //
@@ -52,99 +125,32 @@
 */
 int main(int argc, char *argv[]) {
 
-    // const float PI = 3.1415927;
-    
-    Vector3 color1(1.0f, 0.5f, 1.0f);
-    Vector3 color2(0.5f, 1.0f, 0.25f);
-    Vector3 color3(0.2f, 0.3f, 0.7f);
-    Vector3 color4(0.9f, 0.0f, 0.1f);
-    Vector3 color5(0.5f, 0.4f, 0.2f);
+    int wid_cuda = 1200, hgt_cuda = 1200;
 
-    Vector3 center(-1.0, 0.0, 0.0);
-    float r = 1.0f;
-    Sphere s(center, r, color1);
+    Vector3 * frame_buffer_cuda;
+    gpuErrchk(cudaMallocManaged(&frame_buffer_cuda, wid_cuda * hgt_cuda * sizeof(Vector3)));
 
-    Vector3 center2(1.5, 0.5, 0.0);
-    float r2 = .25f;
-    Sphere s2(center2, r2, color4);
+    World * world_cuda = new World();
 
-    Vector3 center3(1.0, -1.0, 0.0);
-    float r3 = .5f;
-    Sphere s3(center3, r3, color4);
+    RenderEngine * r_engine_cuda = new RenderEngine(wid_cuda, hgt_cuda, *world_cuda);
 
-    Vector3 point(0.0, -2.5, 0.0);
-    Vector3 normal(0, 1.0, 0.0);
-    Plane p(normal, point, color2);
+    initializeWorld<<<1, 1>>>(world_cuda);
+    gpuErrchk(cudaPeekAtLastError());
+    gpuErrchk(cudaDeviceSynchronize());
 
-    Vector3 point2(0.0, 2.5, 0.0);
-    Vector3 normal2(0.0, -1.0, 0.0);
-    Plane p2(normal2, point2, color3);
+    const int block_size_side = 16;
+    const dim3 block_size(block_size_side, block_size_side);
+    const int grid_size_hgt = (hgt_cuda + block_size_side - 1)/block_size_side;
+    const int grid_size_wid = (wid_cuda + block_size_side - 1)/block_size_side;
+    const dim3 grid_size(grid_size_hgt, grid_size_wid);
+    std::cout<<"Grid Sizes: "<<grid_size_hgt<<" "<<grid_size_wid<<std::endl;
+    std::cout<<"Block Sizes: "<<block_size_side<<" "<<block_size_side<<std::endl;
 
-    Vector3 point3(0.0, 1.0, 0.0);
-    Vector3 normal3(-0.0, -0.7, 0.1);
-    Plane p3(normal3, point3, color5);
+    renderPixels<<<grid_size, block_size>>>(r_engine_cuda, frame_buffer_cuda, wid_cuda, hgt_cuda);
+    gpuErrchk(cudaPeekAtLastError());
+    gpuErrchk(cudaDeviceSynchronize());
 
-    Vector3 positioncam(0.0, 0.0, 5.0);
-    Vector3 lookat(0.0f, 0.0f, 0.0f);
-    Vector3 direction = lookat - positioncam;
-    Vector3 updir(0.0, 1.0, 0.0);
-    Camera cam(positioncam, direction, updir, 1.0, 1.0, 1.0);
-
-    Vector3 lightpos(0.0f, .5f, 2.0f); // Position of the light
-    PointLight pointlight(lightpos);
-
-    Vector3 lightdir(1.0f, -1.0f, -1.0f);
-    DirectionalLight dirLight(lightdir);
-
-    float beam_angle = 10.0;
-    float falloff_angle = 30.0;
-    beam_angle = beam_angle * PI / 180.0;
-    falloff_angle = falloff_angle * PI / 180.0;
-    Vector3 spotlightpos(-0.3, 0.25, 3.0f);
-    Vector3 spotlightdir = -spotlightpos;
-    SpotLight spotlight(spotlightpos, spotlightdir, beam_angle, falloff_angle);
-
-    World w;
-    w.addVisibleObject(&s);
-    w.addVisibleObject(&s2);
-    w.addVisibleObject(&s3);
-    w.addVisibleObject(&p);
-    w.addVisibleObject(&p2);
-    w.addVisibleObject(&p3);
-    w.setCamera(cam);
-    w.addLight(&pointlight); // Light id 0
-    w.addLight(&dirLight); // Light id 1
-    w.addLight(&spotlight); // Light id 2
-    // w.addLight(&spotlight); // Light id 2
-    // w.addLight(&spotlight); // Light id 2
-    // w.addLight(&spotlight); // Light id 2
-    // w.addLight(&spotlight); // Light id 2
-    // w.addLight(&spotlight); // Light id 2
-    // w.addLight(&spotlight); // Light id 2
-    // w.addLight(&spotlight); // Light id 2
-    // w.addLight(&spotlight); // Light id 2
-    // w.addLight(&spotlight); // Light id 2
-    // w.addLight(&spotlight); // Light id 2
-    // w.addLight(&spotlight); // Light id 2
-
-    // w.setLightId(2);
-
-    // float segment = 20.0;
-    // float radius_circle = 2.0f;
-    // for(int i = 0; i < 360; i += segment) {
-    //     float angle = i * PI / 180.0;
-    //     Vector3* color_each = new Vector3(abs(sin(angle)), abs(cos(angle)), abs(sin(angle) * cos(angle)));
-    //     Vector3* pos = new Vector3(radius_circle* sin(angle), radius_circle * cos(angle), 0.0);
-    //     Sphere * sphere = new Sphere(*pos, 0.3, *color_each);
-    //     w.addVisibleObject(sphere);
-    // }
-
-    int wid = 1200, hgt = 1200;
-    RenderEngine r_engine(wid, hgt, w);
-
-    // r_engine.setSharpEdge(0.4, 0.6);
-    // r_engine.setBorder(true, 0.6);
-    r_engine.renderAllPixels();
+    makeImage(frame_buffer_cuda, wid_cuda, hgt_cuda);
 
     return 0;
 }

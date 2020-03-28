@@ -26,9 +26,9 @@
 #include "Ray.h"
 #include "VisibleObject.h"
 #include "Helpers.h"
+#include "Managed.h"
 
-class RenderEngine
-{
+class RenderEngine : public Managed {
     private:
         int w, h;
 
@@ -39,27 +39,27 @@ class RenderEngine
         bool if_border;
         float border_thinkness;
     public:
-        __host__ RenderEngine();
-        __host__ RenderEngine(int width, int height, World& world_p);
-        __host__ ~RenderEngine();
+        __host__ __device__ RenderEngine();
+        __host__ __device__ RenderEngine(int width, int height, World& world_p);
+        __host__ __device__ ~RenderEngine();
 
-        __host__ Vector3 render(float u, float v); //Renders the point u,v on the screen (0 <= u,v <= 1)
-        __host__ Vector3 computeColor(VisibleObject* closest_object, Ray& eye_ray, Vector3& t); // Compute color given the closest object
+        __host__ __device__ Vector3 render(float u, float v); //Renders the point u,v on the screen (0 <= u,v <= 1)
+        __host__ __device__ Vector3 computeColor(VisibleObject* closest_object, Ray& eye_ray, Vector3& t); // Compute color given the closest object
 
-        __host__ Vector3 renderPixel(int i, int j); // Renders the pixel i,j
+        __host__ __device__ Vector3 renderPixel(int i, int j); // Renders the pixel i,j
 
-        __host__ void renderAllPixels();
+        __host__ __device__ void renderAllPixels();
 
-        __host__ inline void setSharpEdge(float edge0, float edge1) {sharp_edge0 = edge0; sharp_edge1 = edge1;}
+        __host__ __device__ inline void setSharpEdge(float edge0, float edge1) {sharp_edge0 = edge0; sharp_edge1 = edge1;}
 
-        __host__ void setBorder(bool border, float thickness) { if_border = border; border_thinkness = thickness; }
+        __host__ __device__ void setBorder(bool border, float thickness) { if_border = border; border_thinkness = thickness; }
         World* world;
         Camera* camera;
 };
 
-__host__ RenderEngine::RenderEngine() {}
+__host__ __device__ RenderEngine::RenderEngine() {}
 
-__host__ RenderEngine::RenderEngine(int width, int height, World& world_p) : w(width), h(height) {
+__host__ __device__ RenderEngine::RenderEngine(int width, int height, World& world_p) : w(width), h(height) {
     world = &world_p;
     camera = world->getCamera();
     sharp_edge0 = 0.0;
@@ -70,9 +70,9 @@ __host__ RenderEngine::RenderEngine(int width, int height, World& world_p) : w(w
     border_thinkness = 0.6;
 }
 
-__host__ RenderEngine::~RenderEngine() {}
+__host__ __device__ RenderEngine::~RenderEngine() {}
 
-__host__ Vector3 RenderEngine::render(float u, float v) {
+__host__ __device__ Vector3 RenderEngine::render(float u, float v) {
     Ray eye_ray = camera->getRay(u, v);
 
     int total_objects = world->getTotalVisibleObjects();
@@ -125,7 +125,7 @@ __host__ Vector3 RenderEngine::render(float u, float v) {
 //	Return:
 //      Vector3 color
 */
-__host__ Vector3 RenderEngine::computeColor(VisibleObject* closest_object, Ray& eye_ray, Vector3& point_of_intersection) {
+__host__ __device__ Vector3 RenderEngine::computeColor(VisibleObject* closest_object, Ray& eye_ray, Vector3& point_of_intersection) {
     
     int total_lights = world->getTotalLights();
 
@@ -199,7 +199,7 @@ __host__ Vector3 RenderEngine::computeColor(VisibleObject* closest_object, Ray& 
     return final_object_color;
 }
 
-__host__ Vector3 RenderEngine::renderPixel(int i, int j)  {
+__host__ __device__ Vector3 RenderEngine::renderPixel(int i, int j)  {
     float u = ((float) i)/((float) w);
     float v = ((float) h - j)/((float) h); // Pixel cordinates have the origin on top left but our screen origin is on the bottom left
 
@@ -210,11 +210,14 @@ __host__ Vector3 RenderEngine::renderPixel(int i, int j)  {
     return render(u, v);
 }
 
-__host__ void RenderEngine::renderAllPixels() {
+__host__ __device__ void RenderEngine::renderAllPixels() {
     Vector3 color_ij(0.0, 0.0, 0.0);
 
     // Output Pixel as Image
+    #ifdef ACTUALRENDER
     std::cout << "P3\n" << w << " " << h << "\n255\n";
+    #endif
+    
     for (int j = 0; j < h; j++) {
         for (int i = 0; i < w; i++) {
             color_ij = renderPixel(i, j);

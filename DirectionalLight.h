@@ -25,23 +25,23 @@ class DirectionalLight: public Light {
         Vector3 n; // Direction of the light
 
     public:
-        __host__ DirectionalLight();
-        __host__ DirectionalLight(Vector3& direction);
-        __host__ ~DirectionalLight();
+        __host__ __device__ DirectionalLight();
+        __host__ __device__ DirectionalLight(Vector3& direction);
+        __host__ __device__ ~DirectionalLight();
 
-        __host__ Vector3 getLightAtPoint(Vector3& point) const;
+        __host__ __device__ Vector3 getLightAtPoint(Vector3& point) const;
 };
 
-__host__ DirectionalLight::DirectionalLight() {}
+__host__ __device__ DirectionalLight::DirectionalLight() {}
 
-__host__ DirectionalLight::DirectionalLight(Vector3& direction) {
+__host__ __device__ DirectionalLight::DirectionalLight(Vector3& direction) {
     n = direction;
     n.make_unit_vector();
 }
 
-__host__ DirectionalLight::~DirectionalLight() {}
+__host__ __device__ DirectionalLight::~DirectionalLight() {}
 
-__host__ Vector3 DirectionalLight::getLightAtPoint(Vector3& point) const {
+__host__ __device__ Vector3 DirectionalLight::getLightAtPoint(Vector3& point) const {
     return n; 
 }
 

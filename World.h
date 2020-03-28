@@ -23,8 +23,9 @@
 #include "VisibleObject.h"
 #include "Camera.h"
 #include "Light.h"
+#include "Managed.h"
 
-class World
+class World : public Managed
 {
     private:
         VisibleObject** visible_objects;
@@ -60,8 +61,6 @@ class World
         __host__ __device__ Light * getLight(int i) const;
         __host__ __device__ inline void setLightId(int i) { if(i < total_lights) light_id = i; }
         __host__ __device__ inline int getSelectedLightId() { return light_id; }
-
-        // Vector3 light; // Coming soon: LIIIGGGGGTTTTHHHH CLLLLAAASSSSS
 
 };
 

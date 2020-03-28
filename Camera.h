@@ -46,17 +46,17 @@ class Camera
         float d; // Distance of the screen from the camera
         
     public:
-        __host__ Camera();
-        __host__ Camera(const Vector3& position, const Vector3& direction, const Vector3& up, float sx, float sy, float screen_distance);
-        __host__ ~Camera();
+        __host__ __device__ Camera();
+        __host__ __device__ Camera(const Vector3& position, const Vector3& direction, const Vector3& up, float sx, float sy, float screen_distance);
+        __host__ __device__ ~Camera();
 
-        __host__ Ray getRay(float u, float v) const; // Get the ray corresponding the u,v cordinates on the screen
-        __host__ inline Vector3 getUnitViewVector() const { return n_2; }
+        __host__ __device__ Ray getRay(float u, float v) const; // Get the ray corresponding the u,v cordinates on the screen
+        __host__ __device__ inline Vector3 getUnitViewVector() const { return n_2; }
 };
 
-__host__ Camera::Camera() {}
+__host__ __device__ Camera::Camera() {}
 
-__host__ Camera::Camera(const Vector3& position, const Vector3& direction, const Vector3& up, float sx, float sy, float screen_distance) : p_e(position), v_view(direction), v_up(up), s_x(sx), s_y(sy), d(screen_distance) {
+__host__ __device__ Camera::Camera(const Vector3& position, const Vector3& direction, const Vector3& up, float sx, float sy, float screen_distance) : p_e(position), v_view(direction), v_up(up), s_x(sx), s_y(sy), d(screen_distance) {
     n_0 = cross(v_view, v_up);
     n_0.make_unit_vector();
 
@@ -90,7 +90,7 @@ Camera::~Camera() {}
 //	Return:
 //   TODO
 */
-__host__ inline Ray Camera::getRay(float u, float v) const {
+__host__ __device__ inline Ray Camera::getRay(float u, float v) const {
     #ifdef DEBUG
     std::cout<<"Ray direction in getRay: "<<(p_00 + (u * n_0 * s_x) + (v * n_1 * s_y)) - p_e<<std::endl;
     Vector3 r = (p_00 + (u * n_0 * s_x) + (v * n_1 * s_y)) - p_e;

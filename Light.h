@@ -24,16 +24,16 @@ class Light {
     private:
 
     public:
-        __host__ Light();
-        __host__ ~Light();
+        __host__ __device__ Light();
+        __host__ __device__ ~Light();
 
         // This function has to be overridden for each type of light
         // The returned vector v: |v| <= 1
-        __host__ virtual Vector3 getLightAtPoint(Vector3& point) const = 0;
+        __host__ __device__ virtual Vector3 getLightAtPoint(Vector3& point) const = 0;
 };
 
-__host__ Light::Light() {}
+__host__ __device__ Light::Light() {}
 
-__host__ Light::~Light() {}
+__host__ __device__ Light::~Light() {}
 
 #endif
