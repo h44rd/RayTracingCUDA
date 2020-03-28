@@ -48,7 +48,7 @@ class RenderEngine {
 
         __host__ __device__ Vector3 renderPixel(int i, int j); // Renders the pixel i,j
 
-        __host__ __device__ void renderAllPixels();
+        __host__ void renderAllPixels();
 
         __host__ __device__ inline void setSharpEdge(float edge0, float edge1) {sharp_edge0 = edge0; sharp_edge1 = edge1;}
 
@@ -210,7 +210,7 @@ __host__ __device__ Vector3 RenderEngine::renderPixel(int i, int j)  {
     return render(u, v);
 }
 
-__host__ __device__ void RenderEngine::renderAllPixels() {
+__host__ void RenderEngine::renderAllPixels() {
     Vector3 color_ij(0.0, 0.0, 0.0);
 
     // Output Pixel as Image

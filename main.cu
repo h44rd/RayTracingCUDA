@@ -16,8 +16,9 @@
 //
 // ----------------------------------------------------------------------------------------------------
 
+// #define CUDADEBUG
 // #define RENDERDEBUG
-// #define ACTUALRENDER
+#define ACTUALRENDER
 // #define INITDEBUG
 
 #include <iostream>
@@ -50,62 +51,80 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
 
 /*  Function: initializeEngine
 //
-//  The function adds different object to World
+//  The function adds different objects to World
 //
 //	Parameters:
-//  
-//		
-//		
+//      World ** world: A pointer to a pointer to a world object
+//		int w: The width of the resulting image
+//		int h: The height of the resulting image
 //	
 //	Return:
-//		int: 0 if successful
+//		void
 */
 __global__
-void initializeWorld(World * world) {
-    world = new World();
+void initializeWorld(World ** world, int w, int h) {
+    *world = new World();
 
-    Vector3 * color = new Vector3(1.0f, 0.5f, 1.0f);
-    Vector3 * center = new Vector3(-1.0, 0.0, 0.0);
+    Vector3 color(0.0f, 0.5f, 0.0f);
+    Vector3 center(-1.0, 0.0, 0.0);
     float r = 1.0f;
-    Sphere * s = new Sphere(*center, r, *color);
+    Sphere * s = new Sphere(center, r, color);
 
-    world->addVisibleObject(s);
+    (*world)->addVisibleObject(s);
 
     float beam_angle = 10.0;
     float falloff_angle = 30.0;
     beam_angle = beam_angle * PI / 180.0;
     falloff_angle = falloff_angle * PI / 180.0;
-    Vector3 * spotlightpos = new Vector3(-0.3, 0.25, 3.0f);
-    Vector3 * spotlightdir = new Vector3();
-    * spotlightdir = -1 * (*spotlightpos);
-    SpotLight * spotlight = new SpotLight(* spotlightpos, * spotlightdir, beam_angle, falloff_angle);
+    Vector3 spotlightpos(-0.3, 0.25, 3.0f);
+    Vector3 spotlightdir = -spotlightpos;
+    SpotLight * spotlight = new SpotLight(spotlightpos, spotlightdir, beam_angle, falloff_angle);
 
-    world->addLight(spotlight);
+    (*world)->addLight(spotlight);
+
+    Vector3 color2(0.5f, 1.0f, 0.25f);
+    Vector3 point(0.0, -2.5, 0.0);
+    Vector3 normal(0, 1.0, 0.0);
+    Plane * p = new Plane(normal, point, color2);
+
+    (*world)->addVisibleObject(p);
+
+    Vector3 positioncam(0.0, 0.0, 5.0);
+    Vector3 lookat(0.0f, 0.0f, 0.0f);
+    Vector3 direction = lookat - positioncam;
+    Vector3 updir(0.0, 1.0, 0.0);
+    float aspect_ratio = (w * 1.0)/(h * 1.0);
+    float distance_from_screen = 1.0;
+    Camera * cam = new Camera(positioncam, direction, updir, aspect_ratio, 1.0, distance_from_screen);
+
+    (*world)->setCamera(*cam);
 }
 
 /*  Function: addWorldToEngine
 //
 //	The function initializes the RenderEngine
-//  The function adds different object to World and passes World to the RenderEngine
+//  An already initialized World object is passed to the RenderEngine
 //
 //	Parameters:
-//  
-//		
-//		
-//	
+//      int w: Width of the rendered image
+//      int h: Height of the rendered image		
+//		RenderEngine ** r_engine: Pointer to a pointer to the RenderEngine object
+//      World ** world: Pointer to a pointer 	
+// 
 //	Return:
-//		int: 0 if successful
+//		void
 */
 __global__
-void addWorldToEngine(int w, int h, RenderEngine * r_engine, World * world) {
-    r_engine = new RenderEngine(w, h, *world);
+void addWorldToEngine(int w, int h, RenderEngine ** r_engine, World ** world) {
+    *r_engine = new RenderEngine(w, h, **world);
 }
 
 
 
 /*  Function: Parallelize Render for each pixels
 //
-//	The function parallelizes the render on the GPU
+//	The kernel CUDA function implements the parallel threads for rendering each pixel.
+//  The rendered pixels are stored in the frame_buffer array
 //
 //	Parameters:
 //
@@ -113,17 +132,19 @@ void addWorldToEngine(int w, int h, RenderEngine * r_engine, World * world) {
 //		
 //	
 //	Return:
-//		int: 0 if successful
+//		void
 */
 __global__
-void renderPixels(RenderEngine * r_engine, Vector3 * frame_buffer, int w, int h) {
-    const int c = blockIdx.x * blockDim.x + threadIdx.x;
-    const int r = blockIdx.y * blockDim.y + threadIdx.y;
-    const int i = r * w + c;
+void renderPixels(RenderEngine ** r_engine, Vector3 * frame_buffer, int w, int h) {
+    const int i = blockIdx.x * blockDim.x + threadIdx.x;
+    const int j = blockIdx.y * blockDim.y + threadIdx.y;
+    const int index_ij = j * w + i;
 
-    frame_buffer[i] =  r_engine->renderPixel(r, c);
+    frame_buffer[index_ij] =  (*r_engine)->renderPixel(i, j);
+    #ifdef CUDADEBUG
     printf("End of renderPixels\n");
-    printf("framebuffer: %d %d %d\n", frame_buffer[i].r(), frame_buffer[i].g(), frame_buffer[i].b());
+    printf("framebuffer: i: %d r: %d c: %d\n", index_ij, i, j);
+    #endif
 }
 
 
@@ -141,26 +162,18 @@ void renderPixels(RenderEngine * r_engine, Vector3 * frame_buffer, int w, int h)
 */
 int main(int argc, char *argv[]) {
 
-    // JUST FOR REFERENCE
-    // Vector3 positioncam(0.0, 0.0, 5.0);
-    // Vector3 lookat(0.0f, 0.0f, 0.0f);
-    // Vector3 direction = lookat - positioncam;
-    // Vector3 updir(0.0, 1.0, 0.0);
-    // Camera cam(positioncam, direction, updir, 1.0, 1.0, 1.0);
-
-
-    int wid_cuda = 16, hgt_cuda = 16;
+    int wid_cuda = 1200, hgt_cuda = 800;
 
     Vector3 * frame_buffer_cuda;
     gpuErrchk(cudaMallocManaged(&frame_buffer_cuda, wid_cuda * hgt_cuda * sizeof(Vector3)));
 
-    World * world_cuda;
-    gpuErrchk(cudaMallocManaged(&world_cuda, sizeof(World)));
+    World ** world_cuda;
+    gpuErrchk(cudaMallocManaged(&world_cuda, sizeof(World *)));
 
-    RenderEngine * r_engine_cuda;
-    gpuErrchk(cudaMallocManaged(&r_engine_cuda, sizeof(RenderEngine)));
+    RenderEngine ** r_engine_cuda;
+    gpuErrchk(cudaMallocManaged(&r_engine_cuda, sizeof(RenderEngine *)));
 
-    initializeWorld<<<1, 1>>>(world_cuda);
+    initializeWorld<<<1, 1>>>(world_cuda, wid_cuda, hgt_cuda);
     gpuErrchk(cudaPeekAtLastError());
     gpuErrchk(cudaDeviceSynchronize());
 
@@ -172,9 +185,12 @@ int main(int argc, char *argv[]) {
     const dim3 block_size(block_size_side, block_size_side);
     const int grid_size_hgt = (hgt_cuda + block_size_side - 1)/block_size_side;
     const int grid_size_wid = (wid_cuda + block_size_side - 1)/block_size_side;
-    const dim3 grid_size(grid_size_hgt, grid_size_wid);
+    const dim3 grid_size(grid_size_wid, grid_size_hgt);
+
+    #ifdef CUDADEBUG
     std::cout<<"Grid Sizes: "<<grid_size_hgt<<" "<<grid_size_wid<<std::endl;
     std::cout<<"Block Sizes: "<<block_size_side<<" "<<block_size_side<<std::endl;
+    #endif
 
     renderPixels<<<grid_size, block_size>>>(r_engine_cuda, frame_buffer_cuda, wid_cuda, hgt_cuda);
     gpuErrchk(cudaPeekAtLastError());

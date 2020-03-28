@@ -21,18 +21,26 @@ __host__ __device__ float smoothstep(float edge0, float edge1, float x) {
 
 __host__ void makeImage(Vector3 * frame_buffer, int w, int h) {
     // Output Pixel as Image
+    #ifdef ACTUALRENDER
     std::cout << "P3\n" << w << " " << h << "\n255\n";
-   
+    #endif
+
     int index_ij;
-    for (int j = 0; j < h; j++) {
+    for (int j = h - 1; j >= 0; j--) {
         for (int i = 0; i < w; i++) {
             index_ij = j * w + i;
-            std::cout<<"Index: "<<index_ij<<std::endl;
+
+            #ifdef CUDADEBUG
+            std::cout<<"makeImage: index: "<<index_ij<<" i: "<<i<<" j: "<<j<<std::endl;
+            #endif
+            
             int ir = int(255.99*frame_buffer[index_ij].r());
             int ig = int(255.99*frame_buffer[index_ij].g());
             int ib = int(255.99*frame_buffer[index_ij].b());
 
+            #ifdef ACTUALRENDER
             std::cout << ir << " " << ig << " " << ib << "\n";
+            #endif
         }
     }
 }
