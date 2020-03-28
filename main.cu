@@ -65,7 +65,7 @@ __global__
 void initializeWorld(World ** world, int w, int h) {
     *world = new World();
 
-    Vector3 color(0.0f, 0.5f, 0.0f);
+    Vector3 color(1.0f, 0.5f, 1.0f);
     Vector3 center(-1.0, 0.0, 0.0);
     float r = 1.0f;
     Sphere * s = new Sphere(center, r, color);

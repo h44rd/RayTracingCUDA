@@ -2,6 +2,9 @@
 
 ## Some results
 
+### Latest Render
+![Lastest Render](out.jpg)
+
 ### Directional light
 ![One Render](outputs/directional.jpg)
 
