@@ -50,6 +50,41 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
 
 /*  Function: initializeEngine
 //
+//  The function adds different object to World
+//
+//	Parameters:
+//  
+//		
+//		
+//	
+//	Return:
+//		int: 0 if successful
+*/
+__global__
+void initializeWorld(World * world) {
+    world = new World();
+
+    Vector3 * color = new Vector3(1.0f, 0.5f, 1.0f);
+    Vector3 * center = new Vector3(-1.0, 0.0, 0.0);
+    float r = 1.0f;
+    Sphere * s = new Sphere(*center, r, *color);
+
+    world->addVisibleObject(s);
+
+    float beam_angle = 10.0;
+    float falloff_angle = 30.0;
+    beam_angle = beam_angle * PI / 180.0;
+    falloff_angle = falloff_angle * PI / 180.0;
+    Vector3 * spotlightpos = new Vector3(-0.3, 0.25, 3.0f);
+    Vector3 * spotlightdir = new Vector3();
+    * spotlightdir = -1 * (*spotlightpos);
+    SpotLight * spotlight = new SpotLight(* spotlightpos, * spotlightdir, beam_angle, falloff_angle);
+
+    world->addLight(spotlight);
+}
+
+/*  Function: addWorldToEngine
+//
 //	The function initializes the RenderEngine
 //  The function adds different object to World and passes World to the RenderEngine
 //
@@ -62,27 +97,8 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
 //		int: 0 if successful
 */
 __global__
-void initializeWorld(World * world) {
-    printf("Inside initialize >>>> Start\n");
-    Vector3 * color = new Vector3(1.0f, 0.5f, 1.0f);
-    Vector3 * center = new Vector3(-1.0, 0.0, 0.0);
-    float r = 1.0f;
-    Sphere * s = new Sphere(*center, r, *color);
-
-    world->addVisibleObject(s);
-
-    // float beam_angle = 10.0;
-    // float falloff_angle = 30.0;
-    // beam_angle = beam_angle * PI / 180.0;
-    // falloff_angle = falloff_angle * PI / 180.0;
-    // Vector3 * spotlightpos = new Vector3(-0.3, 0.25, 3.0f);
-    // Vector3 * spotlightdir = new Vector3();
-    // * spotlightdir = -1 * (*spotlightpos);
-    // SpotLight * spotlight = new SpotLight(* spotlightpos, * spotlightdir, beam_angle, falloff_angle);
-
-    // world->addLight(spotlight);
-
-    printf("Inside initialize >>>> End\n");
+void addWorldToEngine(int w, int h, RenderEngine * r_engine, World * world) {
+    r_engine = new RenderEngine(w, h, *world);
 }
 
 
@@ -101,12 +117,12 @@ void initializeWorld(World * world) {
 */
 __global__
 void renderPixels(RenderEngine * r_engine, Vector3 * frame_buffer, int w, int h) {
-    printf("Render >>> Start \n");
     const int c = blockIdx.x * blockDim.x + threadIdx.x;
     const int r = blockIdx.y * blockDim.y + threadIdx.y;
     const int i = r * w + c;
 
     frame_buffer[i] =  r_engine->renderPixel(r, c);
+    printf("End of renderPixels\n");
     printf("framebuffer: %d %d %d\n", frame_buffer[i].r(), frame_buffer[i].g(), frame_buffer[i].b());
 }
 
@@ -125,16 +141,30 @@ void renderPixels(RenderEngine * r_engine, Vector3 * frame_buffer, int w, int h)
 */
 int main(int argc, char *argv[]) {
 
-    int wid_cuda = 1200, hgt_cuda = 1200;
+    // JUST FOR REFERENCE
+    // Vector3 positioncam(0.0, 0.0, 5.0);
+    // Vector3 lookat(0.0f, 0.0f, 0.0f);
+    // Vector3 direction = lookat - positioncam;
+    // Vector3 updir(0.0, 1.0, 0.0);
+    // Camera cam(positioncam, direction, updir, 1.0, 1.0, 1.0);
+
+
+    int wid_cuda = 16, hgt_cuda = 16;
 
     Vector3 * frame_buffer_cuda;
     gpuErrchk(cudaMallocManaged(&frame_buffer_cuda, wid_cuda * hgt_cuda * sizeof(Vector3)));
 
-    World * world_cuda = new World();
+    World * world_cuda;
+    gpuErrchk(cudaMallocManaged(&world_cuda, sizeof(World)));
 
-    RenderEngine * r_engine_cuda = new RenderEngine(wid_cuda, hgt_cuda, *world_cuda);
+    RenderEngine * r_engine_cuda;
+    gpuErrchk(cudaMallocManaged(&r_engine_cuda, sizeof(RenderEngine)));
 
     initializeWorld<<<1, 1>>>(world_cuda);
+    gpuErrchk(cudaPeekAtLastError());
+    gpuErrchk(cudaDeviceSynchronize());
+
+    addWorldToEngine<<<1, 1>>>(wid_cuda, hgt_cuda, r_engine_cuda, world_cuda);
     gpuErrchk(cudaPeekAtLastError());
     gpuErrchk(cudaDeviceSynchronize());
 

@@ -25,7 +25,7 @@
 #include "Light.h"
 #include "Managed.h"
 
-class World : public Managed
+class World
 {
     private:
         VisibleObject** visible_objects;

@@ -28,7 +28,7 @@
 #include "Helpers.h"
 #include "Managed.h"
 
-class RenderEngine : public Managed {
+class RenderEngine {
     private:
         int w, h;
 
@@ -217,7 +217,7 @@ __host__ __device__ void RenderEngine::renderAllPixels() {
     #ifdef ACTUALRENDER
     std::cout << "P3\n" << w << " " << h << "\n255\n";
     #endif
-    
+
     for (int j = 0; j < h; j++) {
         for (int i = 0; i < w; i++) {
             color_ij = renderPixel(i, j);

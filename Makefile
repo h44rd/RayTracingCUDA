@@ -6,11 +6,11 @@ NVCC = nvcc
 #NVCC_DBG       = -g -G
 NVCC_DBG       =
 
-NVCCFLAGS      = $(NVCC_DBG) -m64
+NVCCFLAGS      = $(NVCC_DBG) -m64 -G
 GENCODE_FLAGS  = -gencode arch=compute_50,code=sm_50
 
 SRCS = main.cu
-INCS = Vector3.h Ray.h VisibleObject.h World.h Sphere.h Plane.h RenderEngine.h
+INCS = Vector3.h Ray.h VisibleObject.h World.h Sphere.h Plane.h RenderEngine.h Managed.h
 
 render: render.o
 	$(NVCC) $(NVCCFLAGS) $(GENCODE_FLAGS) -o render render.o
