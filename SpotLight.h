@@ -39,6 +39,7 @@ class SpotLight: public Light {
         __host__ __device__ ~SpotLight();
 
         __host__ __device__ Vector3 getLightAtPoint(Vector3& point) const;
+        __host__ __device__ Vector3 getLightPosition() { return p_0; }
 };
 
 __host__ __device__ SpotLight::SpotLight() {}
@@ -68,7 +69,7 @@ __host__ __device__ Vector3 SpotLight::getLightAtPoint(Vector3& point) const {
         return light_direction;
     } else if(angle < beam_angle + corrected_falloff) {
         angle = angle - beam_angle;
-        float portion = (corrected_falloff - angle)/(corrected_falloff + 0.00001f);
+        float portion = (corrected_falloff - angle)/(corrected_falloff);
         return portion * light_direction;
     }
     return Vector3(0, 0, 0);

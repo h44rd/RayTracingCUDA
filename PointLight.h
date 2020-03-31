@@ -31,6 +31,7 @@ class PointLight: public Light {
         __host__ __device__ ~PointLight();
 
         __host__ __device__ Vector3 getLightAtPoint(Vector3& point) const;
+        __host__ __device__ Vector3 getLightPosition() { return p_0; }
 };
 
 __host__ __device__ PointLight::PointLight() {}

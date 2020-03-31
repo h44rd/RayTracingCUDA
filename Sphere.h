@@ -65,7 +65,7 @@ __host__ __device__ Sphere::~Sphere() {}
 //   Vector3 v;
 //   v.x = solution t
 //   v.y = dot product (intensity) of ray with normal at the point
-//   v.z = if intersection happened
+//   v.z = if intersection happened v.z > 0
 */
 __host__ __device__ Vector3 Sphere::getIntersectInfo(const Ray& incoming) const {
     Vector3 intersection(0.0f, 0.0f, 0.0f);

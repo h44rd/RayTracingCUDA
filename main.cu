@@ -16,6 +16,7 @@
 //
 // ----------------------------------------------------------------------------------------------------
 
+// #define SHADOWDEBUG
 // #define CUDADEBUG
 // #define RENDERDEBUG
 #define ACTUALRENDER
@@ -66,7 +67,7 @@ void initializeWorld(World ** world, int w, int h) {
     *world = new World();
 
     Vector3 color(1.0f, 0.5f, 1.0f);
-    Vector3 center(-1.0, 0.0, 0.0);
+    Vector3 center(0.0, 0.0, 0.0);
     float r = 1.0f;
     Sphere * s = new Sphere(center, r, color);
 
@@ -76,20 +77,29 @@ void initializeWorld(World ** world, int w, int h) {
     float falloff_angle = 30.0;
     beam_angle = beam_angle * PI / 180.0;
     falloff_angle = falloff_angle * PI / 180.0;
-    Vector3 spotlightpos(-0.3, 0.25, 3.0f);
-    Vector3 spotlightdir = -spotlightpos;
+    Vector3 spotlightpos(0.0, 7.0, 1.0f);
+    Vector3 spotlightdir = - spotlightpos;
     SpotLight * spotlight = new SpotLight(spotlightpos, spotlightdir, beam_angle, falloff_angle);
-
     (*world)->addLight(spotlight);
+
+    Vector3 spotlightpos2(-10.0f, 0.0, 1.0);
+    Vector3 spotlightdir2 = - spotlightpos2;
+    SpotLight * spotlight2 = new SpotLight(spotlightpos2, spotlightdir2, beam_angle, falloff_angle);
+    (*world)->addLight(spotlight2);
 
     Vector3 color2(0.5f, 1.0f, 0.25f);
     Vector3 point(0.0, -2.5, 0.0);
     Vector3 normal(0, 1.0, 0.0);
     Plane * p = new Plane(normal, point, color2);
-
     (*world)->addVisibleObject(p);
 
-    Vector3 positioncam(0.0, 0.0, 5.0);
+    Vector3 color3(0.1f, 0.2f, 0.8f);
+    Vector3 point2(2.5, 0.0, 0.0);
+    Vector3 normal2(-1.0, 0.2, 0.2f);
+    Plane * p2 = new Plane(normal2, point2, color3);
+    (*world)->addVisibleObject(p2);
+
+    Vector3 positioncam(0.0, 0.0, 7.0);
     Vector3 lookat(0.0f, 0.0f, 0.0f);
     Vector3 direction = lookat - positioncam;
     Vector3 updir(0.0, 1.0, 0.0);

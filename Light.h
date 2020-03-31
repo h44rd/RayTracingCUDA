@@ -30,10 +30,15 @@ class Light {
         // This function has to be overridden for each type of light
         // The returned vector v: |v| <= 1
         __host__ __device__ virtual Vector3 getLightAtPoint(Vector3& point) const = 0;
+        __host__ __device__ virtual Vector3 getLightPosition();
 };
 
 __host__ __device__ Light::Light() {}
 
 __host__ __device__ Light::~Light() {}
+
+__host__ __device__ Vector3 Light::getLightPosition() {
+    return Vector3(0.0f, 0.0f, 0.0f);
+}
 
 #endif

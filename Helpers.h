@@ -2,6 +2,8 @@
 #define HELPERSH
 
 #define PI 3.1415927
+#define EPSILON 0.00001 // A very small number
+#define LARGENUMBER 1000
 
 __host__ __device__ float clamp(float x, float high, float low);
 __host__ __device__ float smoothstep(float edge0, float edge1, float x);
@@ -26,7 +28,7 @@ __host__ void makeImage(Vector3 * frame_buffer, int w, int h) {
     #endif
 
     int index_ij;
-    for (int j = h - 1; j >= 0; j--) {
+    for (int j = 0; j < h; j++) {
         for (int i = 0; i < w; i++) {
             index_ij = j * w + i;
 
