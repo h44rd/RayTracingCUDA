@@ -1,12 +1,19 @@
 # Ray Tracing in CUDA C++
 
-## Some results
+## Some results for Shadows
 
 ### Latest Render
 ![Lastest Render](out.jpg)
 
-### Directional light
-![One Render](outputs/directional.jpg)
+### Single Spot Light
+![One Render](outputs/singlespotlightshadow.jpg)
+
+### Multiple Spot Lights
+![One Render](outputs/multiplespotlightshadow.jpg)
+
+### Multiple Objects
+![One Render](outputs/multipleobjectsshadow.jpg)
+
 
 ### Point light
 ![Point light 1](outputs/point.jpg)
