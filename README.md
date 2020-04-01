@@ -12,6 +12,7 @@
 ![One Render](outputs/multiplespotlightshadow.jpg)
 
 ### Multiple Objects
+![One Render](outputs/multipleobjectsshadow2.jpg)
 ![One Render](outputs/multipleobjectsshadow.jpg)
 
 

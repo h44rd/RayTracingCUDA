@@ -67,28 +67,28 @@ void initializeWorld(World ** world, int w, int h) {
     *world = new World();
 
     Vector3 color(1.0f, 0.5f, 1.0f);
-    Vector3 center(0.5, 0.0, 0.0);
+    Vector3 center(-2.0, 0.0, 0.0);
     float r = 0.5f;
     Sphere * s = new Sphere(center, r, color);
 
     (*world)->addVisibleObject(s);
 
-    Vector3 center2(-1.0, 0.0, 0.0);
-    float r2 = 1.0f;
-    Sphere * s2 = new Sphere(center2, r2, color);
+    Vector3 color5(1.0f, 0.0f, 0.1f);
+    Vector3 center2(0.5, 0.0, 0.0);
+    float r2 = 1.5f;
+    Sphere * s2 = new Sphere(center2, r2, color5);
     (*world)->addVisibleObject(s2);
-
 
     float beam_angle = 10.0;
     float falloff_angle = 30.0;
     beam_angle = beam_angle * PI / 180.0;
     falloff_angle = falloff_angle * PI / 180.0;
-    Vector3 spotlightpos(0.0, 7.0, 0.0f);
+    Vector3 spotlightpos(-3.0, 3.0, 0.0f);
     Vector3 spotlightdir = - spotlightpos;
     SpotLight * spotlight = new SpotLight(spotlightpos, spotlightdir, beam_angle, falloff_angle);
-    (*world)->addLight(spotlight);
+    // (*world)->addLight(spotlight);
 
-    Vector3 spotlightpos2(-10.0f, 0.0, 0.0);
+    Vector3 spotlightpos2(-4.0f, 0.0, 0.0);
     Vector3 spotlightdir2 = - spotlightpos2;
     SpotLight * spotlight2 = new SpotLight(spotlightpos2, spotlightdir2, beam_angle, falloff_angle);
     (*world)->addLight(spotlight2);
@@ -105,14 +105,13 @@ void initializeWorld(World ** world, int w, int h) {
     Plane * p2 = new Plane(normal2, point2, color3);
     (*world)->addVisibleObject(p2);
 
-    Vector3 positioncam(0.0, 0.0, 5.0);
+    Vector3 positioncam(-3.0, 0.0, 4.0);
     Vector3 lookat(0.0f, 0.0f, 0.0f);
     Vector3 direction = lookat - positioncam;
     Vector3 updir(0.0, 1.0, 0.0);
     float aspect_ratio = (w * 1.0)/(h * 1.0);
     float distance_from_screen = 1.0;
     Camera * cam = new Camera(positioncam, direction, updir, aspect_ratio, 1.0, distance_from_screen);
-
     (*world)->setCamera(*cam);
 }
 

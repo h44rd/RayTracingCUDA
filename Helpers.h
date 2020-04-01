@@ -2,7 +2,7 @@
 #define HELPERSH
 
 #define PI 3.1415927
-#define EPSILON 0.00001 // A very small number
+#define EPSILON 0.0000001 // A very small number
 #define LARGENUMBER 1000
 
 __host__ __device__ float clamp(float x, float high, float low);

@@ -158,13 +158,14 @@ __host__ __device__ Vector3 RenderEngine::computeColor(VisibleObject* closest_ob
 
         // Computing Diffuse 
         float diffuse_intensity = max(0.0f, dot(normal, light_direction));
-        diffuse_intensity = smoothstep(sharp_edge0, sharp_edge1, diffuse_intensity);
+        // diffuse_intensity = smoothstep(sharp_edge0, sharp_edge1, diffuse_intensity);
 
         // Computing Specular
         Vector3 light_direction_unit = unit_vector(light_direction);
         reflection = -light_direction + 2.0f * dot(light_direction_unit, normal) * normal;
         reflection.make_unit_vector();
         float specular_intensity = max(0.0f, dot(eye, reflection));
+        specular_intensity = pow(specular_intensity, 4);
         
         // specular_intensity = smoothstep(sharp_edge0, sharp_edge1, specular_intensity);
         specular_intensity = smoothstep(0.8, 1.0, specular_intensity);
@@ -172,15 +173,19 @@ __host__ __device__ Vector3 RenderEngine::computeColor(VisibleObject* closest_ob
         float shadow_intensity = 0.0f;
         if(dot(normal, light_direction) >= 0.0f) { // Compute the shadow only if dot(N,L) > 0
             shadow_intensity = computeShadowIntensityAtPoint(point_of_intersection, world->getLight(i));
+            if(shadow_intensity > 1.0f) {
+                shadow_intensity = 1.0;
+            }
         }
 
-        shadow_intensity = smoothstep(0.0f, 0.4, shadow_intensity);
+        shadow_intensity = smoothstep(0.0f, 0.2, shadow_intensity);
 
+        diffuse_intensity = (1.0f - shadow_intensity) * diffuse_intensity;
+        // specular_intensity = (1.0f - shadow_intensity) * specular_intensity;
+        
         #ifdef SHADOWDEBUG
         printf("Shadow Intensity: %f\n", shadow_intensity);
         #endif
-
-        diffuse_intensity = (1.0f - shadow_intensity) * diffuse_intensity;
 
         if(shadow_intensity > EPSILON) {
             specular_intensity = 0.0f;
