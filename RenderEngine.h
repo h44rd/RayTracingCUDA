@@ -192,15 +192,15 @@ __host__ __device__ Vector3 RenderEngine::computeColor(VisibleObject* closest_ob
         shadow_intensity = smoothstep(0.0f, 0.2, shadow_intensity);
 
         diffuse_intensity = (1.0f - shadow_intensity) * diffuse_intensity;
-        // specular_intensity = (1.0f - shadow_intensity) * specular_intensity;
+        specular_intensity = (1.0f - shadow_intensity) * specular_intensity;
         
         #ifdef SHADOWDEBUG
         printf("Shadow Intensity: %f\n", shadow_intensity);
         #endif
 
-        if(shadow_intensity > EPSILON) {
-            specular_intensity = 0.0f;
-        }
+        // if(shadow_intensity > EPSILON) {
+        //     specular_intensity = 0.0f;
+        // }
         
         // Computing the final color
         Vector3 color_from_light;
@@ -302,6 +302,8 @@ __device__ Vector3 RenderEngine::renderPixelSampling(int i, int j, curandState& 
         final_color += render(u, v);
     }
     final_color = final_color / n_samples;
+
+    rand_state = rand_state_pixel;
 
     return final_color;
 }

@@ -87,7 +87,7 @@ void initializeWorld(World ** world, int w, int h) {
     Vector3 spotlightpos(-3.0, 3.0, 0.0f);
     Vector3 spotlightdir = - spotlightpos;
     SpotLight * spotlight = new SpotLight(spotlightpos, spotlightdir, beam_angle, falloff_angle);
-    // (*world)->addLight(spotlight);
+    (*world)->addLight(spotlight);
 
     Vector3 spotlightpos2(-4.0f, 0.0, 0.0);
     Vector3 spotlightdir2 = - spotlightpos2;
@@ -110,7 +110,7 @@ void initializeWorld(World ** world, int w, int h) {
     Vector3 lookat(0.0f, 0.0f, 0.0f);
     Vector3 direction = lookat - positioncam;
     Vector3 updir(0.0, 1.0, 0.0);
-    float aspect_ratio = (w * 1.0)/(h * 1.0);
+    float aspect_ratio = (float(w))/(float(h));
     float distance_from_screen = 1.0;
     Camera * cam = new Camera(positioncam, direction, updir, aspect_ratio, 1.0, distance_from_screen);
     (*world)->setCamera(*cam);
