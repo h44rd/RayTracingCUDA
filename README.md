@@ -14,6 +14,9 @@
 ### 64 Samples
 ![1 Sample](outputs/sampling_64.jpg)
 
+## 32 Samples Multiple Lights
+![1 Sample](outputs/sampling_32_multiple_lights.jpg)
+
 ### Single Spot Light
 ![One Render](outputs/singlespotlightshadow.jpg)
 
