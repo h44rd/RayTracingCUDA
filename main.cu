@@ -87,7 +87,7 @@ void initializeWorld(World ** world, int w, int h) {
     Vector3 spotlightpos(-3.0, 3.0, 0.0f);
     Vector3 spotlightdir = - spotlightpos;
     SpotLight * spotlight = new SpotLight(spotlightpos, spotlightdir, beam_angle, falloff_angle);
-    (*world)->addLight(spotlight);
+    // (*world)->addLight(spotlight);
 
     Vector3 spotlightpos2(-4.0f, 0.0, 0.0);
     Vector3 spotlightdir2 = - spotlightpos2;
