@@ -24,6 +24,7 @@
 
 #include <iostream>
 #include <math.h>
+#include <curand_kernel.h>
 
 #include "Vector3.h"
 #include "Ray.h"
@@ -130,8 +131,9 @@ void initializeWorld(World ** world, int w, int h) {
 //		void
 */
 __global__
-void addWorldToEngine(int w, int h, RenderEngine ** r_engine, World ** world) {
+void addWorldToEngine(int w, int h, RenderEngine ** r_engine, World ** world, int samples) {
     *r_engine = new RenderEngine(w, h, **world);
+    (* r_engine)->setAntiAliasing(samples);
 }
 
 
@@ -150,12 +152,14 @@ void addWorldToEngine(int w, int h, RenderEngine ** r_engine, World ** world) {
 //		void
 */
 __global__
-void renderPixels(RenderEngine ** r_engine, Vector3 * frame_buffer, int w, int h) {
+void renderPixels(RenderEngine ** r_engine, Vector3 * frame_buffer, curandState * rand_sequence, int w, int h) {
     const int i = blockIdx.x * blockDim.x + threadIdx.x;
     const int j = blockIdx.y * blockDim.y + threadIdx.y;
     const int index_ij = j * w + i;
 
-    frame_buffer[index_ij] =  (*r_engine)->renderPixel(i, j);
+    curand_init(1984 + index_ij, 0, 0, &rand_sequence[index_ij]);
+
+    frame_buffer[index_ij] =  (*r_engine)->renderPixelSampling(i, j, rand_sequence[index_ij]);
     #ifdef CUDADEBUG
     printf("End of renderPixels\n");
     printf("framebuffer: i: %d r: %d c: %d\n", index_ij, i, j);
@@ -179,8 +183,13 @@ int main(int argc, char *argv[]) {
 
     int wid_cuda = 1200, hgt_cuda = 800;
 
+    int samples = 32;
+
     Vector3 * frame_buffer_cuda;
     gpuErrchk(cudaMallocManaged(&frame_buffer_cuda, wid_cuda * hgt_cuda * sizeof(Vector3)));
+
+    curandState * rand_sequence;
+    gpuErrchk(cudaMallocManaged(&rand_sequence, wid_cuda * hgt_cuda * sizeof(curandState)));
 
     World ** world_cuda;
     gpuErrchk(cudaMallocManaged(&world_cuda, sizeof(World *)));
@@ -192,7 +201,7 @@ int main(int argc, char *argv[]) {
     gpuErrchk(cudaPeekAtLastError());
     gpuErrchk(cudaDeviceSynchronize());
 
-    addWorldToEngine<<<1, 1>>>(wid_cuda, hgt_cuda, r_engine_cuda, world_cuda);
+    addWorldToEngine<<<1, 1>>>(wid_cuda, hgt_cuda, r_engine_cuda, world_cuda, samples);
     gpuErrchk(cudaPeekAtLastError());
     gpuErrchk(cudaDeviceSynchronize());
 
@@ -207,7 +216,7 @@ int main(int argc, char *argv[]) {
     std::cout<<"Block Sizes: "<<block_size_side<<" "<<block_size_side<<std::endl;
     #endif
 
-    renderPixels<<<grid_size, block_size>>>(r_engine_cuda, frame_buffer_cuda, wid_cuda, hgt_cuda);
+    renderPixels<<<grid_size, block_size>>>(r_engine_cuda, frame_buffer_cuda, rand_sequence, wid_cuda, hgt_cuda);
     gpuErrchk(cudaPeekAtLastError());
     gpuErrchk(cudaDeviceSynchronize());
 

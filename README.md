@@ -5,6 +5,15 @@
 ### Latest Render
 ![Lastest Render](out.jpg)
 
+### 1 Sample
+![1 Sample](outputs/sampling_1.jpg)
+
+### 32 Samples
+![1 Sample](outputs/sampling_32_high_res.jpg)
+
+### 64 Samples
+![1 Sample](outputs/sampling_64.jpg)
+
 ### Single Spot Light
 ![One Render](outputs/singlespotlightshadow.jpg)
 

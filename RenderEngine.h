@@ -20,6 +20,9 @@
 #ifndef RENDERENGINEH
 #define RENDERENGINEH
 
+#include <math.h>
+#include <curand_kernel.h>
+
 #include "Vector3.h"
 #include "World.h"
 #include "Camera.h"
@@ -32,6 +35,9 @@
 class RenderEngine {
     private:
         int w, h;
+
+        int n_samples;
+        bool use_antialising;
 
         float sharp_edge0, sharp_edge1;
 
@@ -62,6 +68,10 @@ class RenderEngine {
         __host__ __device__ inline void setSharpEdge(float edge0, float edge1) {sharp_edge0 = edge0; sharp_edge1 = edge1;}
 
         __host__ __device__ void setBorder(bool border, float thickness) { if_border = border; border_thinkness = thickness; }
+
+        __host__ __device__ inline void setAntiAliasing(int samples) { use_antialising = true; n_samples = samples; }
+
+        __device__ Vector3 renderPixelSampling(int i, int j, curandState& rand_state);
         World* world;
         Camera* camera;
 };
@@ -74,7 +84,8 @@ __host__ __device__ RenderEngine::RenderEngine(int width, int height, World& wor
     sharp_edge0 = 0.0;
     sharp_edge1 = 1.0;
     ambient_intensity = 0.2;
-
+    use_antialising = false;
+    n_samples = 32;
     if_border = false;
     border_thinkness = 0.6;
 }
@@ -276,6 +287,25 @@ __host__ __device__ float RenderEngine::computeShadowIntensityAtPoint(Vector3 po
     return shadow_intensity;
 }
 
+__device__ Vector3 RenderEngine::renderPixelSampling(int i, int j, curandState& rand_state)  {
+    float origin_u = ((float) i)/((float) w);
+    float origin_v = ((float) h - j)/((float) h); // Pixel cordinates have the origin on top left but our screen origin is on the bottom left
+
+    float u, v;
+    curandState rand_state_pixel = rand_state;
+
+    Vector3 final_color(0.0, 0.0, 0.0);
+
+    for(int i = 0; i < n_samples; i++) {
+        u = origin_u + curand_uniform(&rand_state_pixel)/(float(w));
+        v = origin_v + curand_uniform(&rand_state_pixel)/(float(h));
+        final_color += render(u, v);
+    }
+    final_color = final_color / n_samples;
+
+    return final_color;
+}
+
 __host__ __device__ Vector3 RenderEngine::renderPixel(int i, int j)  {
     float u = ((float) i)/((float) w);
     float v = ((float) h - j)/((float) h); // Pixel cordinates have the origin on top left but our screen origin is on the bottom left
@@ -283,7 +313,6 @@ __host__ __device__ Vector3 RenderEngine::renderPixel(int i, int j)  {
     #ifdef DEBUG
     std::cout<<u<<","<<v<<std::endl;
     #endif
-    
     return render(u, v);
 }
 
