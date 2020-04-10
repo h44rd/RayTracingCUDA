@@ -63,8 +63,6 @@ class RenderEngine {
 
         __device__ Vector3 renderPixel(int i, int j, curandState& rand_state); // Renders the pixel i,j
 
-        // __host__ void renderAllPixels();
-
         __device__ inline void setSharpEdge(float edge0, float edge1) {sharp_edge0 = edge0; sharp_edge1 = edge1;}
 
         __device__ void setBorder(bool border, float thickness) { if_border = border; border_thinkness = thickness; }
@@ -198,13 +196,13 @@ __device__ Vector3 RenderEngine::computeColor(VisibleObject* closest_object, Ray
         specular_intensity = (1.0f - shadow_intensity) * specular_intensity;
         
         #ifdef SHADOWDEBUG
-        printf("Shadow Intensity: %f\n", shadow_intensity);
-        #endif
+            printf("Shadow Intensity: %f\n", shadow_intensity);
 
-        // if(shadow_intensity > 0.0f) {
-        //     specular_intensity = 0.0f;
-        //     diffuse_intensity = 0.0f;
-        // }
+            if(shadow_intensity > 0.0f) {
+                specular_intensity = 0.0f;
+                diffuse_intensity = 0.0f;
+            }
+        #endif
         
         // Computing the final color
         Vector3 color_from_light;
@@ -216,13 +214,13 @@ __device__ Vector3 RenderEngine::computeColor(VisibleObject* closest_object, Ray
 
         #ifdef RENDERDEBUG
             if(border_intensity < 0.0 || border_intensity > 1.0) {
-                // std::cout<<"Point of intersection: "<<point_of_intersection<<std::endl;
+                std::cout<<"Point of intersection: "<<point_of_intersection<<std::endl;
                 std::cout<<"normal: "<<normal<<std::endl;
                 std::cout<<"View: "<<view_unit_vector<<std::endl;
-                // std::cout<<"light point: "<<world->light<<std::endl;
-                // std::cout<<"light: "<<light_direction<<std::endl;
-                // std::cout<<"Dot normal light: "<<dot(normal, light_direction)<<std::endl;
-                // std::cout<<"Diffuse: "<<diffuse_intensity<<std::endl;
+                std::cout<<"light point: "<<world->light<<std::endl;
+                std::cout<<"light: "<<light_direction<<std::endl;
+                std::cout<<"Dot normal light: "<<dot(normal, light_direction)<<std::endl;
+                std::cout<<"Diffuse: "<<diffuse_intensity<<std::endl;
                 std::cout<<"Dot: "<<dot(normal, view_unit_vector)<<std::endl;
                 std::cout<<"Border param: "<<border_intensity<<std::endl<<std::endl;
             }
@@ -325,32 +323,5 @@ __device__ Vector3 RenderEngine::renderPixel(int i, int j, curandState& rand_sta
     #endif
     return render(u, v, rand_state);
 }
-
-// __host__ void RenderEngine::renderAllPixels() {
-//     Vector3 color_ij(0.0, 0.0, 0.0);
-
-//     // Output Pixel as Image
-//     #ifdef ACTUALRENDER
-//     std::cout << "P3\n" << w << " " << h << "\n255\n";
-//     #endif
-
-//     for (int j = 0; j < h; j++) {
-//         for (int i = 0; i < w; i++) {
-//             color_ij = renderPixel(i, j);
-
-//             #ifdef DEBUG
-//             std::cout<<color_ij<<std::endl;
-//             #endif
-
-//             int ir = int(255.99*color_ij.r());
-//             int ig = int(255.99*color_ij.g());
-//             int ib = int(255.99*color_ij.b());
-
-//             #ifdef ACTUALRENDER
-//             std::cout << ir << " " << ig << " " << ib << "\n";
-//             #endif
-//         }
-//     }
-// }
 
 #endif
