@@ -5,6 +5,9 @@
 ### Latest Render
 ![Lastest Render](out.jpg)
 
+### Area Light 64 Samples
+![Area Light](arealight.jpg)
+
 ### 1 Sample
 ![1 Sample](outputs/sampling_1.jpg)
 

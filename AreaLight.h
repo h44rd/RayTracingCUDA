@@ -32,22 +32,22 @@ class AreaLight : public Light {
         float w, h;   // Width and height of the area 
 
         Vector3 current_position; // The position of the current sample of the area light
-        curandState * rand_state; // CUDA random state
 
     public:
-        __host__ __device__ AreaLight();
-        __host__ __device__ AreaLight(Vector3& position, Vector3& normal, Vector3& up, float width, float height, curandState& random_state);
-        __host__ __device__ ~AreaLight();
+        __device__ AreaLight();
+        __device__ AreaLight(Vector3& position, Vector3& normal, Vector3& up, float width, float height);
+        __device__ ~AreaLight();
 
-        __device__ void setRandomSamplePosition();
+        __device__ void setRandomSamplePosition(curandState& rand_state);
         __device__ Vector3 getLightAtPoint(Vector3& point);
-        __host__ __device__ Vector3 getLightPosition() { return current_position; }
+        __device__ Vector3 getLightPosition() { return current_position; }
+        __device__ bool ifSamplingRequired() {return true; }
 };
 
-__host__ __device__ AreaLight::AreaLight() {}
+__device__ AreaLight::AreaLight() {}
 
-__host__ __device__ AreaLight::AreaLight(Vector3& position, Vector3& normal, Vector3& up, float width, float height, curandState& random_state) 
- : c_c(position), a_n(normal), a_up(up), w(width), h(height), rand_state(&random_state) {
+__device__ AreaLight::AreaLight(Vector3& position, Vector3& normal, Vector3& up, float width, float height) 
+ : c_c(position), a_n(normal), a_up(up), w(width), h(height) {
     a_n.make_unit_vector();
     a_up.make_unit_vector();
     
@@ -61,18 +61,21 @@ __host__ __device__ AreaLight::AreaLight(Vector3& position, Vector3& normal, Vec
     current_position = c_c;
 }
 
-__host__ __device__ AreaLight::~AreaLight() {}
+__device__ AreaLight::~AreaLight() {}
 
 __device__ Vector3 AreaLight::getLightAtPoint(Vector3& point) {
-    setRandomSamplePosition();
     Vector3 p = point - current_position;
     p.make_unit_vector();
     return p; 
 }
 
-__device__ void AreaLight::setRandomSamplePosition() {
-    float x = curand_uniform(rand_state) * w;
-    float y = curand_uniform(rand_state) * h;
+__device__ void AreaLight::setRandomSamplePosition(curandState& rand_state) {
+    float x = curand_uniform(&rand_state) * w;
+    float y = curand_uniform(&rand_state) * h;
+
+    #ifdef AREALIGHTDEBUG
+        printf("X: %f\n", x);
+    #endif
 
     current_position = c_0 + x * n_0 + y * n_1;
 }

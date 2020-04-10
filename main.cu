@@ -16,6 +16,7 @@
 //
 // ----------------------------------------------------------------------------------------------------
 
+// #define AREALIGHTDEBUG
 // #define SHADOWDEBUG
 // #define CUDADEBUG
 // #define RENDERDEBUG
@@ -81,26 +82,24 @@ void initializeWorld(World ** world, int w, int h) {
     Sphere * s2 = new Sphere(center2, r2, color5);
     (*world)->addVisibleObject(s2);
 
-    // float beam_angle = 10.0;
-    // float falloff_angle = 30.0;
-    // beam_angle = beam_angle * PI / 180.0;
-    // falloff_angle = falloff_angle * PI / 180.0;
-    // Vector3 spotlightpos(-3.0, 3.0, 0.0f);
-    // Vector3 spotlightdir = - spotlightpos;
-    // SpotLight * spotlight = new SpotLight(spotlightpos, spotlightdir, beam_angle, falloff_angle);
-    // // (*world)->addLight(spotlight);
+    float beam_angle = 10.0;
+    float falloff_angle = 30.0;
+    beam_angle = beam_angle * PI / 180.0;
+    falloff_angle = falloff_angle * PI / 180.0;
+    Vector3 spotlightpos(-3.0, 3.0, 0.0f);
+    Vector3 spotlightdir = - spotlightpos;
+    SpotLight * spotlight = new SpotLight(spotlightpos, spotlightdir, beam_angle, falloff_angle);
+    // (*world)->addLight(spotlight);
 
-    // Vector3 spotlightpos2(-4.0f, 0.0, 0.0);
-    // Vector3 spotlightdir2 = - spotlightpos2;
-    // SpotLight * spotlight2 = new SpotLight(spotlightpos2, spotlightdir2, beam_angle, falloff_angle);
+    Vector3 spotlightpos2(-4.0f, 0.0, 0.0);
+    Vector3 spotlightdir2 = - spotlightpos2;
+    SpotLight * spotlight2 = new SpotLight(spotlightpos2, spotlightdir2, beam_angle, falloff_angle);
     // (*world)->addLight(spotlight2);
 
-    curandState * area_light_rand_state = new curandState;
-    curand_init(1984, 0, 0, area_light_rand_state);
     Vector3 area_light_pos(-4.0, 2.0, 0);
     Vector3 area_light_dir = - area_light_pos;
     Vector3 area_light_up(0.0, 1.0, 0.0);
-    AreaLight * areaLigth = new AreaLight(area_light_pos, area_light_dir, area_light_up, 1, 1, *area_light_rand_state);
+    AreaLight * areaLigth = new AreaLight(area_light_pos, area_light_dir, area_light_up, 0.1, 0.1);
     (*world)->addLight(areaLigth);
 
     Vector3 color2(0.5f, 1.0f, 0.25f);
@@ -192,7 +191,7 @@ int main(int argc, char *argv[]) {
 
     int wid_cuda = 1200, hgt_cuda = 800;
 
-    int samples = 32;
+    int samples = 64;
 
     Vector3 * frame_buffer_cuda;
     gpuErrchk(cudaMallocManaged(&frame_buffer_cuda, wid_cuda * hgt_cuda * sizeof(Vector3)));

@@ -34,23 +34,23 @@ class SpotLight: public Light {
         float beam_angle;
 
     public:
-        __host__ __device__ SpotLight();
-        __host__ __device__ SpotLight(Vector3& position, Vector3& direction, float p_beam_angle, float p_falloff_angle);
-        __host__ __device__ ~SpotLight();
+        __device__ SpotLight();
+        __device__ SpotLight(Vector3& position, Vector3& direction, float p_beam_angle, float p_falloff_angle);
+        __device__ ~SpotLight();
 
-        __host__ __device__ Vector3 getLightAtPoint(Vector3& point) const;
-        __host__ __device__ Vector3 getLightPosition() { return p_0; }
+        __device__ Vector3 getLightAtPoint(Vector3& point);
+        __device__ Vector3 getLightPosition() { return p_0; }
 };
 
-__host__ __device__ SpotLight::SpotLight() {}
+__device__ SpotLight::SpotLight() {}
 
-__host__ __device__ SpotLight::SpotLight(Vector3& position, Vector3& direction, float p_beam_angle, float p_falloff_angle) : p_0(position), n(direction), beam_angle(p_beam_angle), falloff_angle(p_falloff_angle) {
+__device__ SpotLight::SpotLight(Vector3& position, Vector3& direction, float p_beam_angle, float p_falloff_angle) : p_0(position), n(direction), beam_angle(p_beam_angle), falloff_angle(p_falloff_angle) {
     n.make_unit_vector();
 }
 
-__host__ __device__ SpotLight::~SpotLight() {}
+__device__ SpotLight::~SpotLight() {}
 
-__host__ __device__ Vector3 SpotLight::getLightAtPoint(Vector3& point) const {
+__device__ Vector3 SpotLight::getLightAtPoint(Vector3& point) {
     Vector3 light_direction = point - p_0;
     float length_from_light = light_direction.length();
     light_direction.make_unit_vector();

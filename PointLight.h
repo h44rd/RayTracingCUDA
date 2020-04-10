@@ -26,21 +26,21 @@ class PointLight: public Light {
         Vector3 p_0; // Position of the light
 
     public:
-        __host__ __device__ PointLight();
-        __host__ __device__ PointLight(Vector3& position);
-        __host__ __device__ ~PointLight();
+        __device__ PointLight();
+        __device__ PointLight(Vector3& position);
+        __device__ ~PointLight();
 
-        __host__ __device__ Vector3 getLightAtPoint(Vector3& point) const;
-        __host__ __device__ Vector3 getLightPosition() { return p_0; }
+        __device__ Vector3 getLightAtPoint(Vector3& point);
+        __device__ Vector3 getLightPosition() { return p_0; }
 };
 
-__host__ __device__ PointLight::PointLight() {}
+__device__ PointLight::PointLight() {}
 
-__host__ __device__ PointLight::PointLight(Vector3& position) : p_0(position) {}
+__device__ PointLight::PointLight(Vector3& position) : p_0(position) {}
 
-__host__ __device__ PointLight::~PointLight() {}
+__device__ PointLight::~PointLight() {}
 
-__host__ __device__ Vector3 PointLight::getLightAtPoint(Vector3& point) const {
+__device__ Vector3 PointLight::getLightAtPoint(Vector3& point) {
     Vector3 p = point - p_0;
     p.make_unit_vector();
     return p; 

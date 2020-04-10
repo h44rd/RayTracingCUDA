@@ -47,38 +47,38 @@ class RenderEngine {
         float border_thinkness;
 
         // Given a point and a light, compute how much the ray from the point to the light crosses any other object
-        __host__ __device__ float computeShadowIntensityAtPoint(Vector3 point_of_intersection, Light * light);
+        __device__ float computeShadowIntensityAtPoint(Vector3 point_of_intersection, Light * light);
 
-        __host__ __device__ inline bool ifRayIntersected(const Vector3& intersectInfo) { return (intersectInfo[2] > 0.0f); }
+        __device__ inline bool ifRayIntersected(const Vector3& intersectInfo) { return (intersectInfo[2] > 0.0f); }
 
-        __host__ __device__ inline float getTFromIntersectInfo(const Vector3& intersectInfo) { return intersectInfo[0]; }
+        __device__ inline float getTFromIntersectInfo(const Vector3& intersectInfo) { return intersectInfo[0]; }
 
     public:
-        __host__ __device__ RenderEngine();
-        __host__ __device__ RenderEngine(int width, int height, World& world_p);
-        __host__ __device__ ~RenderEngine();
+        __device__ RenderEngine();
+        __device__ RenderEngine(int width, int height, World& world_p);
+        __device__ ~RenderEngine();
 
-        __host__ __device__ Vector3 render(float u, float v); //Renders the point u,v on the screen (0 <= u,v <= 1)
-        __host__ __device__ Vector3 computeColor(VisibleObject* closest_object, Ray& eye_ray, Vector3& t); // Compute color given the closest object
+        __device__ Vector3 render(float u, float v, curandState& rand_state); //Renders the point u,v on the screen (0 <= u,v <= 1)
+        __device__ Vector3 computeColor(VisibleObject* closest_object, Ray& eye_ray, Vector3& t, curandState& rand_state); // Compute color given the closest object
 
-        __host__ __device__ Vector3 renderPixel(int i, int j); // Renders the pixel i,j
+        __device__ Vector3 renderPixel(int i, int j, curandState& rand_state); // Renders the pixel i,j
 
-        __host__ void renderAllPixels();
+        // __host__ void renderAllPixels();
 
-        __host__ __device__ inline void setSharpEdge(float edge0, float edge1) {sharp_edge0 = edge0; sharp_edge1 = edge1;}
+        __device__ inline void setSharpEdge(float edge0, float edge1) {sharp_edge0 = edge0; sharp_edge1 = edge1;}
 
-        __host__ __device__ void setBorder(bool border, float thickness) { if_border = border; border_thinkness = thickness; }
+        __device__ void setBorder(bool border, float thickness) { if_border = border; border_thinkness = thickness; }
 
-        __host__ __device__ inline void setAntiAliasing(int samples) { use_antialising = true; n_samples = samples; }
+        __device__ inline void setAntiAliasing(int samples) { use_antialising = true; n_samples = samples; }
 
         __device__ Vector3 renderPixelSampling(int i, int j, curandState& rand_state);
         World* world;
         Camera* camera;
 };
 
-__host__ __device__ RenderEngine::RenderEngine() {}
+__device__ RenderEngine::RenderEngine() {}
 
-__host__ __device__ RenderEngine::RenderEngine(int width, int height, World& world_p) : w(width), h(height) {
+__device__ RenderEngine::RenderEngine(int width, int height, World& world_p) : w(width), h(height) {
     world = &world_p;
     camera = world->getCamera();
     sharp_edge0 = 0.0;
@@ -90,9 +90,9 @@ __host__ __device__ RenderEngine::RenderEngine(int width, int height, World& wor
     border_thinkness = 0.6;
 }
 
-__host__ __device__ RenderEngine::~RenderEngine() {}
+__device__ RenderEngine::~RenderEngine() {}
 
-__host__ __device__ Vector3 RenderEngine::render(float u, float v) {
+__device__ Vector3 RenderEngine::render(float u, float v, curandState& rand_state) {
     Ray eye_ray = camera->getRay(u, v);
 
     int total_objects = world->getTotalVisibleObjects();
@@ -130,7 +130,7 @@ __host__ __device__ Vector3 RenderEngine::render(float u, float v) {
     
     Vector3 point_of_intersection = eye_ray.getPoint(min_t);
 
-    return computeColor(closest_object, eye_ray, point_of_intersection);
+    return computeColor(closest_object, eye_ray, point_of_intersection, rand_state);
 }
 
 /*  Function: computeColor
@@ -145,7 +145,7 @@ __host__ __device__ Vector3 RenderEngine::render(float u, float v) {
 //	Return:
 //      Vector3 color
 */
-__host__ __device__ Vector3 RenderEngine::computeColor(VisibleObject* closest_object, Ray& eye_ray, Vector3& point_of_intersection) {
+__device__ Vector3 RenderEngine::computeColor(VisibleObject* closest_object, Ray& eye_ray, Vector3& point_of_intersection, curandState& rand_state) {
     
     int total_lights = world->getTotalLights();
 
@@ -164,6 +164,9 @@ __host__ __device__ Vector3 RenderEngine::computeColor(VisibleObject* closest_ob
 
     //Iterating through each light
     for(int i = 0; i < total_lights; i++) {
+        if((world->getLight(i))->ifSamplingRequired()) {
+            (world->getLight(i))->setRandomSamplePosition(rand_state);
+        }
         Vector3 light_direction = (world->getLight(i))->getLightAtPoint(point_of_intersection);
         light_direction = -light_direction;
 
@@ -198,8 +201,9 @@ __host__ __device__ Vector3 RenderEngine::computeColor(VisibleObject* closest_ob
         printf("Shadow Intensity: %f\n", shadow_intensity);
         #endif
 
-        // if(shadow_intensity > EPSILON) {
+        // if(shadow_intensity > 0.0f) {
         //     specular_intensity = 0.0f;
+        //     diffuse_intensity = 0.0f;
         // }
         
         // Computing the final color
@@ -244,7 +248,7 @@ __host__ __device__ Vector3 RenderEngine::computeColor(VisibleObject* closest_ob
     return final_object_color;
 }
 
-__host__ __device__ float RenderEngine::computeShadowIntensityAtPoint(Vector3 point_of_intersection, Light * light) {
+__device__ float RenderEngine::computeShadowIntensityAtPoint(Vector3 point_of_intersection, Light * light) {
     float shadow_intensity = 0.0f;
 
     Vector3 light_direction = light->getLightAtPoint(point_of_intersection);
@@ -299,7 +303,11 @@ __device__ Vector3 RenderEngine::renderPixelSampling(int i, int j, curandState& 
     for(int i = 0; i < n_samples; i++) {
         u = origin_u + curand_uniform(&rand_state_pixel)/(float(w));
         v = origin_v + curand_uniform(&rand_state_pixel)/(float(h));
-        final_color += render(u, v);
+        final_color += render(u, v, rand_state_pixel);
+
+        #ifdef AREALIGHTDEBUG
+            // printf("u: %f\n", u);
+        #endif
     }
     final_color = final_color / n_samples;
 
@@ -308,41 +316,41 @@ __device__ Vector3 RenderEngine::renderPixelSampling(int i, int j, curandState& 
     return final_color;
 }
 
-__host__ __device__ Vector3 RenderEngine::renderPixel(int i, int j)  {
+__device__ Vector3 RenderEngine::renderPixel(int i, int j, curandState& rand_state)  {
     float u = ((float) i)/((float) w);
     float v = ((float) h - j)/((float) h); // Pixel cordinates have the origin on top left but our screen origin is on the bottom left
 
     #ifdef DEBUG
     std::cout<<u<<","<<v<<std::endl;
     #endif
-    return render(u, v);
+    return render(u, v, rand_state);
 }
 
-__host__ void RenderEngine::renderAllPixels() {
-    Vector3 color_ij(0.0, 0.0, 0.0);
+// __host__ void RenderEngine::renderAllPixels() {
+//     Vector3 color_ij(0.0, 0.0, 0.0);
 
-    // Output Pixel as Image
-    #ifdef ACTUALRENDER
-    std::cout << "P3\n" << w << " " << h << "\n255\n";
-    #endif
+//     // Output Pixel as Image
+//     #ifdef ACTUALRENDER
+//     std::cout << "P3\n" << w << " " << h << "\n255\n";
+//     #endif
 
-    for (int j = 0; j < h; j++) {
-        for (int i = 0; i < w; i++) {
-            color_ij = renderPixel(i, j);
+//     for (int j = 0; j < h; j++) {
+//         for (int i = 0; i < w; i++) {
+//             color_ij = renderPixel(i, j);
 
-            #ifdef DEBUG
-            std::cout<<color_ij<<std::endl;
-            #endif
+//             #ifdef DEBUG
+//             std::cout<<color_ij<<std::endl;
+//             #endif
 
-            int ir = int(255.99*color_ij.r());
-            int ig = int(255.99*color_ij.g());
-            int ib = int(255.99*color_ij.b());
+//             int ir = int(255.99*color_ij.r());
+//             int ig = int(255.99*color_ij.g());
+//             int ib = int(255.99*color_ij.b());
 
-            #ifdef ACTUALRENDER
-            std::cout << ir << " " << ig << " " << ib << "\n";
-            #endif
-        }
-    }
-}
+//             #ifdef ACTUALRENDER
+//             std::cout << ir << " " << ig << " " << ib << "\n";
+//             #endif
+//         }
+//     }
+// }
 
 #endif
