@@ -27,6 +27,9 @@
 #include <math.h>
 #include <curand_kernel.h>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "libs/stb_image.h"
+
 #include "Vector3.h"
 #include "Ray.h"
 
@@ -189,6 +192,9 @@ void renderPixels(RenderEngine ** r_engine, Vector3 * frame_buffer, curandState 
 */
 int main(int argc, char *argv[]) {
 
+    int img_w, img_h, img_chns;
+    unsigned char *universe_img = stbi_load("textures/universe.jpg", &img_w, &img_h, &img_chns, 0);
+
     int wid_cuda = 1200, hgt_cuda = 800;
 
     int samples = 64;
@@ -228,7 +234,7 @@ int main(int argc, char *argv[]) {
     gpuErrchk(cudaPeekAtLastError());
     gpuErrchk(cudaDeviceSynchronize());
 
-    makeImage(frame_buffer_cuda, wid_cuda, hgt_cuda);
+    // makeImage(frame_buffer_cuda, wid_cuda, hgt_cuda);
 
     return 0;
 }
