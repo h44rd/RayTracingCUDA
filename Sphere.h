@@ -44,7 +44,7 @@ class Sphere : public VisibleObject {
         __host__ __device__ Vector3 getNormalAtPoint(Vector3& point) const { return (point - p_c)/r; }
 
         // The color
-        __host__ __device__ Vector3 getColor(Vector3& point) const { return c_0; }
+        __device__ Vector3 getColor(Vector3& point) const { return c_0; }
 };
 
 __host__ __device__ Sphere::Sphere() {}

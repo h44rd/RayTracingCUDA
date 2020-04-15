@@ -39,7 +39,7 @@ class VisibleObject
 
         __host__ __device__ virtual Vector3 getNormalAtPoint(Vector3& point) const;  
 
-        __host__ __device__ virtual Vector3 getColor(Vector3& point) const;
+        __device__ virtual Vector3 getColor(Vector3& point) const;
 
 };
 
@@ -49,6 +49,6 @@ __host__ __device__ VisibleObject::~VisibleObject() {}
 
 __host__ __device__ Vector3 VisibleObject::getNormalAtPoint(Vector3& point) const { return Vector3(0.0f, 0.0f, 0.0f); }
 
-__host__ __device__ Vector3 VisibleObject::getColor(Vector3& point) const { return Vector3(0.0f, 0.0f, 0.0f); }
+__device__ Vector3 VisibleObject::getColor(Vector3& point) const { return Vector3(0.0f, 0.0f, 0.0f); }
 
 #endif

@@ -25,18 +25,25 @@
 
 #include "Vector3.h"
 #include "VisibleObject.h"
-
+#include "Material.h"
 
 class Plane : public VisibleObject {
     private:
         Vector3 n_0; // Normal to the plane
+        Vector3 n_1, n_2; // Two orthogonal vectors on the plane
         Vector3 p_i; // A given point on the plane
         Vector3 c_0; // Color of the plane {{{{COMING SOON: ***MATERIALS***}}}}
+
+        float sx, sy;
+
+        Material * m; // Material of the object
 
     public:
         __host__ __device__ Plane();
         __host__ __device__ Plane(Vector3& normal, Vector3& point, Vector3& color);
         __host__ __device__ ~Plane();
+
+        __device__ inline void setMaterial(Material& material) { m = &material; }
 
         // The function will return a Vector3 with x : Parameter t, y : slope of hit, z : if hit (+ve if hit, -ve otherwise)
         __host__ __device__ Vector3 getIntersectInfo(const Ray& incoming) const;
@@ -44,7 +51,7 @@ class Plane : public VisibleObject {
         // The normal to the plane
         __host__ __device__ Vector3 getNormalAtPoint(Vector3& point) const { return n_0; }
 
-        __host__ __device__ Vector3 getColor(Vector3& point) const { return c_0; }
+        __device__ Vector3 getColor(Vector3& point) const;
 };
 
 __host__ __device__ Plane::Plane() {}
@@ -52,6 +59,22 @@ __host__ __device__ Plane::Plane() {}
 __host__ __device__ Plane::Plane(Vector3& normal, Vector3& point, Vector3& color) : p_i(point), c_0(color) {
     n_0 = normal;
     n_0.make_unit_vector();
+
+    Vector3 v_temp; // Temporary variable which is not parallel to the normal
+    if(n_0.z() >= 1.0 || n_0.z() <= -1.0) {
+        v_temp = Vector3(0.0, n_0.z(), 0.0);
+    } else {
+        v_temp = Vector3(-1.0f * n_0.y(), n_0.x(), n_0.z());
+    }
+    v_temp.make_unit_vector();
+
+    n_1 = cross(n_0, v_temp);
+    n_2 = cross(n_0, n_1);
+    n_1.make_unit_vector();
+    n_2.make_unit_vector(); 
+
+    sx = 50.0f;
+    sy = 50.0f;
 }
 
 __host__ __device__ Plane::~Plane() {}
@@ -85,6 +108,16 @@ __host__ __device__ Vector3 Plane::getIntersectInfo(const Ray& incoming) const {
     intersection[2] = ifIntersect;
 
     return intersection;
+}
+
+__device__ Vector3 Plane::getColor(Vector3& point) const {
+    float u = dot(n_1, point - p_i) / sx;
+    float v = dot(n_2, point - p_i) / sy;
+
+    if(m != NULL) {
+        return m->getBilinearColor(u, v);
+    }
+    return c_0;
 }
 
 #endif
