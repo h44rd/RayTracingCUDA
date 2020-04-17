@@ -110,10 +110,13 @@ __host__ __device__ Vector3 Sphere::getIntersectInfo(const Ray& incoming) const 
 
 __device__ Vector3 Sphere::getColor(Vector3& point) const {
     if(m != NULL) {
-        float theta = atan2(-1 * (point.z() - c_0.z()) , point.x() - c_0.x());
-        float u = (theta + PI) / (2.0 * PI) + 0.5;
-        float phi = acos(-1 * (point.y() - c_0.y()) / r);
-        float v = phi / PI + .5;
+        float theta = atan2(-1 * (point.z() - p_c.z()) , point.x() - p_c.x());
+        float u = (theta + PI) / (2.0 * PI);
+        float phi = acos(-1 * (point.y() - p_c.y()) / r);
+        float v = phi / PI;
+        #ifdef MATERIALDEBUG
+            printf("py: %f. y: %f, distance: %f, phi: %f\n", point.y(), c_0.y(), (point - p_c).length(), phi);
+        #endif
         return m->getBilinearColor(u, v);
     }
     return c_0;

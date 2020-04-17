@@ -83,11 +83,14 @@ void initializeWorld(World ** world, int w, int h, unsigned char ** array_of_ima
     TextureMaterial * m2 = new TextureMaterial();
     m2->setColorImage(img_w[1], img_h[1], img_chns[1], array_of_images[1]);
 
+    TextureMaterial * m3 = new TextureMaterial();
+    m3->setColorImage(img_w[2], img_h[2], img_chns[2], array_of_images[2]);
+
     Vector3 color(0.3f, 0.8f, 0.3f);
     Vector3 center(-2.0, 0.0, 0.0);
     float r = 0.5f;
     Sphere * s = new Sphere(center, r, color);
-
+    s->setMaterial(*m3);
     (*world)->addVisibleObject(s);
 
     Vector3 color5(1.0f, 0.0f, 0.1f);
@@ -104,7 +107,7 @@ void initializeWorld(World ** world, int w, int h, unsigned char ** array_of_ima
     Vector3 spotlightpos(-3.0, 3.0, 0.0f);
     Vector3 spotlightdir = - spotlightpos;
     SpotLight * spotlight = new SpotLight(spotlightpos, spotlightdir, beam_angle, falloff_angle);
-    (*world)->addLight(spotlight);
+    // (*world)->addLight(spotlight);
 
     Vector3 spotlightpos2(-4.0f, 0.0, 0.0);
     Vector3 spotlightdir2 = - spotlightpos2;
@@ -115,7 +118,7 @@ void initializeWorld(World ** world, int w, int h, unsigned char ** array_of_ima
     Vector3 area_light_dir = - area_light_pos;
     Vector3 area_light_up(0.0, 1.0, 0.0);
     AreaLight * areaLigth = new AreaLight(area_light_pos, area_light_dir, area_light_up, 0.1, 0.1);
-    // (*world)->addLight(areaLigth);
+    (*world)->addLight(areaLigth);
 
 
     Vector3 color2(0.5f, 1.0f, 0.25f);
@@ -208,7 +211,7 @@ void renderPixels(RenderEngine ** r_engine, Vector3 * frame_buffer, curandState 
 int main(int argc, char *argv[]) {
 
     // Loading images for textures
-    int n_imgs = 2;
+    int n_imgs = 3;
     unsigned char * host_imgs[n_imgs];
     int img_w[n_imgs], img_h[n_imgs], img_chns[n_imgs];
 
@@ -217,6 +220,11 @@ int main(int argc, char *argv[]) {
 
     host_imgs[1] = stbi_load("textures/wall.jpg", &img_w[1], &img_h[1], &img_chns[1], 0);
 
+    host_imgs[2] = stbi_load("textures/smile.png", &img_w[2], &img_h[2], &img_chns[2], 0);
+
+    #ifdef MATERIALDEBUG
+        std::cout<<img_w[2]<<" "<<img_h[2]<<" "<<img_chns[2]<<std::endl;
+    #endif
 
     // Allocating devices memory to the images on the device
     unsigned char * temp_array[n_imgs];

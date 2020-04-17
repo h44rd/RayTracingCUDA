@@ -40,6 +40,17 @@ __host__ void makeImage(Vector3 * frame_buffer, int w, int h) {
             int ig = int(255.99*frame_buffer[index_ij].g());
             int ib = int(255.99*frame_buffer[index_ij].b());
 
+            if(ir > 256 || ir < 0) {
+                ir = 0;
+            }
+
+            if(ig > 256 || ig < 0) {
+                ig = 0;
+            }
+
+            if(ib > 256 || ib < 0) {
+                ib = 0;
+            }
             #ifdef ACTUALRENDER
             std::cout << ir << " " << ig << " " << ib << "\n";
             #endif

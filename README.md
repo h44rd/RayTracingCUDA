@@ -5,6 +5,10 @@
 ### Latest Render
 ![Lastest Render](out.jpg)
 
+
+### Textures Final
+![Textures](outputs/texture2.jpg)
+
 ### Textures
 ![Textures](outputs/texture.jpg)
 

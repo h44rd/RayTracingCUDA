@@ -50,11 +50,14 @@ __device__ void TextureMaterial::setColorImage(int width, int height, int channe
 
 __device__ Vector3 TextureMaterial::getColorAtIndex(int x, int y) {
     if(x < c_i_width && y < c_i_height) {
-        #ifdef MATERIALDEBUG
-            printf("width: %d. height: %d, x: %d, y: %d\n", c_i_width, c_i_height, x, y);
-        #endif
         int index = c_i_channels * (c_i_width * y + x);
-        return Vector3(float(color_image[index + 0])/256.0f, float(color_image[index + 1])/256.0f, float(color_image[index + 2])/256.0f);
+        
+        // #ifdef MATERIALDEBUG
+        //     printf("width: %d. height: %d, x: %d, y: %d\n", c_i_width, c_i_height, x, y);
+        //     printf("r: %f. g: %f, b: %f\n", float(color_image[index + 0])/255.99f, float(color_image[index + 1])/255.99f, float(color_image[index + 2])/255.99f);
+        // #endif
+
+        return Vector3(float(color_image[index + 0])/255.99f, float(color_image[index + 1])/255.99f, float(color_image[index + 2])/255.99f);
     }
     return Vector3(0.0, 0.0, 0.0);
 }
@@ -68,6 +71,10 @@ __device__ Vector3 TextureMaterial::getBilinearColor(float u, float v) {
 
     int x_0 = int(floor(scaled_u + 0.5));
     int y_0 = int(floor(scaled_v + 0.5));
+    
+    // #ifdef MATERIALDEBUG
+    //         printf("x_0: %d. y_0: %d, scaled_u: %f, scaled_v: %f\n", x_0, y_0, u, v);
+    // #endif
     
     return ty * (tx * getColorAtIndex(x_0 % c_i_width, y_0 % c_i_height) + (1.0 - tx) * getColorAtIndex((x_0 + 1) % c_i_width, y_0 % c_i_height))
            + (1.0 - ty) * (tx * getColorAtIndex(x_0 % c_i_width, (y_0 + 1) % c_i_height) + (1.0 - tx) * getColorAtIndex((x_0 + 1) % c_i_width, (y_0 + 1) % c_i_height));
