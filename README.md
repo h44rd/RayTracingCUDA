@@ -5,6 +5,9 @@
 ### Latest Render
 ![Lastest Render](out.jpg)
 
+### Textures
+![Textures](outputs/texture.jpg)
+
 ### Area Light 64 Samples
 ![Area Light](outputs/arealight.jpg)
 

@@ -23,6 +23,7 @@
 
 #include<math.h>
 
+#include "Helpers.h"
 #include "VisibleObject.h"
 #include "Vector3.h"
 
@@ -31,7 +32,7 @@ class Sphere : public VisibleObject {
         float r;
         Vector3 p_c;
         Vector3 c_0;
-    
+
     public:
         __host__ __device__ Sphere();
         __host__ __device__ Sphere(Vector3& center, float radius, Vector3& color);
@@ -44,7 +45,7 @@ class Sphere : public VisibleObject {
         __host__ __device__ Vector3 getNormalAtPoint(Vector3& point) const { return (point - p_c)/r; }
 
         // The color
-        __device__ Vector3 getColor(Vector3& point) const { return c_0; }
+        __device__ Vector3 getColor(Vector3& point) const;
 };
 
 __host__ __device__ Sphere::Sphere() {}
@@ -107,4 +108,14 @@ __host__ __device__ Vector3 Sphere::getIntersectInfo(const Ray& incoming) const 
     return intersection;  
 }
 
+__device__ Vector3 Sphere::getColor(Vector3& point) const {
+    if(m != NULL) {
+        float theta = atan2(-1 * (point.z() - c_0.z()) , point.x() - c_0.x());
+        float u = (theta + PI) / (2.0 * PI) + 0.5;
+        float phi = acos(-1 * (point.y() - c_0.y()) / r);
+        float v = phi / PI + .5;
+        return m->getBilinearColor(u, v);
+    }
+    return c_0;
+}
 #endif

@@ -77,7 +77,13 @@ __global__
 void initializeWorld(World ** world, int w, int h, unsigned char ** array_of_images, int * img_w, int * img_h, int * img_chns, int n_imgs) {
     *world = new World();
 
-    Vector3 color(1.0f, 0.5f, 1.0f);
+    TextureMaterial * m1 = new TextureMaterial();
+    m1->setColorImage(img_w[0], img_h[0], img_chns[0], array_of_images[0]);
+
+    TextureMaterial * m2 = new TextureMaterial();
+    m2->setColorImage(img_w[1], img_h[1], img_chns[1], array_of_images[1]);
+
+    Vector3 color(0.3f, 0.8f, 0.3f);
     Vector3 center(-2.0, 0.0, 0.0);
     float r = 0.5f;
     Sphere * s = new Sphere(center, r, color);
@@ -88,6 +94,7 @@ void initializeWorld(World ** world, int w, int h, unsigned char ** array_of_ima
     Vector3 center2(0.5, 0.0, 0.0);
     float r2 = 1.5f;
     Sphere * s2 = new Sphere(center2, r2, color5);
+    s2->setMaterial(*m1);
     (*world)->addVisibleObject(s2);
 
     float beam_angle = 10.0;
@@ -110,18 +117,13 @@ void initializeWorld(World ** world, int w, int h, unsigned char ** array_of_ima
     AreaLight * areaLigth = new AreaLight(area_light_pos, area_light_dir, area_light_up, 0.1, 0.1);
     // (*world)->addLight(areaLigth);
 
-    TextureMaterial * m1 = new TextureMaterial();
-    m1->setColorImage(img_w[0], img_h[0], img_chns[0], array_of_images[0]);
 
     Vector3 color2(0.5f, 1.0f, 0.25f);
     Vector3 point(0.0, -2.5, 0.0);
     Vector3 normal(0, 1.0, 0.0);
     Plane * p = new Plane(normal, point, color2);
-    p->setMaterial(*m1);
+    p->setMaterial(*m2);
     (*world)->addVisibleObject(p);
-
-    TextureMaterial * m2 = new TextureMaterial();
-    m2->setColorImage(img_w[1], img_h[1], img_chns[1], array_of_images[1]);
 
     Vector3 color3(0.1f, 0.2f, 0.8f);
     Vector3 point2(2.5, 0.0, 0.0);

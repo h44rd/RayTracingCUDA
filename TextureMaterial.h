@@ -60,14 +60,14 @@ __device__ Vector3 TextureMaterial::getColorAtIndex(int x, int y) {
 }
 
 __device__ Vector3 TextureMaterial::getBilinearColor(float u, float v) {
-    float scaled_u = u * c_i_width;
-    float scaled_v = v * c_i_height;
+    float scaled_u = fabs(u * c_i_width);
+    float scaled_v = fabs(v * c_i_height);
 
     float tx = scaled_u - floor(scaled_u);
     float ty = scaled_v - floor(scaled_v);
 
-    int x_0 = abs(int(floor(scaled_u)));
-    int y_0 = abs(int(floor(scaled_v)));
+    int x_0 = int(floor(scaled_u + 0.5));
+    int y_0 = int(floor(scaled_v + 0.5));
     
     return ty * (tx * getColorAtIndex(x_0 % c_i_width, y_0 % c_i_height) + (1.0 - tx) * getColorAtIndex((x_0 + 1) % c_i_width, y_0 % c_i_height))
            + (1.0 - ty) * (tx * getColorAtIndex(x_0 % c_i_width, (y_0 + 1) % c_i_height) + (1.0 - tx) * getColorAtIndex((x_0 + 1) % c_i_width, (y_0 + 1) % c_i_height));

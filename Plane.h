@@ -25,7 +25,6 @@
 
 #include "Vector3.h"
 #include "VisibleObject.h"
-#include "Material.h"
 
 class Plane : public VisibleObject {
     private:
@@ -36,14 +35,10 @@ class Plane : public VisibleObject {
 
         float sx, sy;
 
-        Material * m; // Material of the object
-
     public:
         __host__ __device__ Plane();
         __host__ __device__ Plane(Vector3& normal, Vector3& point, Vector3& color);
         __host__ __device__ ~Plane();
-
-        __device__ inline void setMaterial(Material& material) { m = &material; }
 
         // The function will return a Vector3 with x : Parameter t, y : slope of hit, z : if hit (+ve if hit, -ve otherwise)
         __host__ __device__ Vector3 getIntersectInfo(const Ray& incoming) const;
@@ -73,8 +68,8 @@ __host__ __device__ Plane::Plane(Vector3& normal, Vector3& point, Vector3& color
     n_1.make_unit_vector();
     n_2.make_unit_vector(); 
 
-    sx = 50.0f;
-    sy = 50.0f;
+    sx = 20.0f;
+    sy = 20.0f;
 }
 
 __host__ __device__ Plane::~Plane() {}

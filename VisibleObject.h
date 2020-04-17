@@ -24,6 +24,7 @@
 
 #include "Vector3.h"
 #include "Ray.h"
+#include "Material.h"
 
 class VisibleObject
 {
@@ -33,6 +34,8 @@ class VisibleObject
         __host__ __device__ VisibleObject();
         __host__ __device__ ~VisibleObject();
 
+        __device__ inline virtual void setMaterial(Material& material) { m = &material; }
+
         // The function will return a Vector3 with x : Parameter t, y : slope of hit, z : yet to be decided (-1)
         // Thought: We could also return the normal vector
         __host__ __device__ virtual Vector3 getIntersectInfo(const Ray& incoming) const = 0;
@@ -41,6 +44,8 @@ class VisibleObject
 
         __device__ virtual Vector3 getColor(Vector3& point) const;
 
+    protected:
+        Material * m = NULL; // Material of the object
 };
 
 __host__ __device__ VisibleObject::VisibleObject() {}
