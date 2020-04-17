@@ -140,7 +140,7 @@ void initializeWorld(World ** world, int w, int h, unsigned char ** array_of_ima
     Vector3 direction = lookat - positioncam;
     Vector3 updir(0.0, 1.0, 0.0);
     float aspect_ratio = (float(w))/(float(h));
-    float distance_from_screen = 1.0;
+    float distance_from_screen = 0.7;
     Camera * cam = new Camera(positioncam, direction, updir, aspect_ratio, 1.0, distance_from_screen);
     (*world)->setCamera(*cam);
 }
