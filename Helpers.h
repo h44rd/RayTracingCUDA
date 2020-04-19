@@ -1,6 +1,9 @@
 #ifndef HELPERSH
 #define HELPERSH
 
+#define TINYOBJLOADER_IMPLEMENTATION // define this in only *one* .cc
+#include "tiny_obj_loader.h"
+
 #define PI 3.1415927
 #define EPSILON 0.0000001 // A very small number
 #define LARGENUMBER 1000
@@ -8,6 +11,7 @@
 __host__ __device__ float clamp(float x, float high, float low);
 __host__ __device__ float smoothstep(float edge0, float edge1, float x);
 __host__ void makeImage(Vector3 * frame_buffer, int w, int h);
+void loadOBJ(const char * file_name, float * vertex_data, float * normal_data);
 
 
 __host__ __device__ float clamp(float x, float low, float high) {
@@ -57,4 +61,10 @@ __host__ void makeImage(Vector3 * frame_buffer, int w, int h) {
         }
     }
 }
+
+// vertex_data and normal_data will be appropriately initialized;
+void loadOBJ(const char * file_name, Vector3 ** vertex_data, Vector3 ** normal_data) {
+
+}
+
 #endif
