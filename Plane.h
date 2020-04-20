@@ -31,7 +31,7 @@ class Plane : public VisibleObject {
         Vector3 n_0; // Normal to the plane
         Vector3 n_1, n_2; // Two orthogonal vectors on the plane
         Vector3 p_i; // A given point on the plane
-        Vector3 c_0; // Color of the plane {{{{COMING SOON: ***MATERIALS***}}}}
+        Vector3 c_0; // Color of the plane
 
         float sx, sy;
 
