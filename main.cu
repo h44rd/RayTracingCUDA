@@ -16,12 +16,13 @@
 //
 // ----------------------------------------------------------------------------------------------------
 
+#define MESHDEBUG
 // #define MATERIALDEBUG
 // #define AREALIGHTDEBUG
 // #define SHADOWDEBUG
 // #define CUDADEBUG
 // #define RENDERDEBUG
-#define ACTUALRENDER
+// #define ACTUALRENDER
 // #define INITDEBUG
 
 #include <iostream>
@@ -48,16 +49,6 @@
 #include "TextureMaterial.h"
 
 #include "RenderEngine.h"
-
-#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
-inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
-{
-   if (code != cudaSuccess) 
-   {
-      fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
-      if (abort) exit(code);
-   }
-}
 
 
 /*  Function: initializeEngine
@@ -250,7 +241,15 @@ int main(int argc, char *argv[]) {
         gpuErrchk(cudaMemcpy(&(array_of_images[i]), &(temp_array[i]), sizeof(unsigned char *), cudaMemcpyHostToDevice));//copy child pointer to device
         gpuErrchk(cudaMemcpy(temp_array[i], host_imgs[i], img_w[i] * img_h[i] * img_chns[i] * sizeof(unsigned char), cudaMemcpyHostToDevice)); // copy image to device
     }
-     
+    
+    Vector3 ** mesh_vertex_data; 
+    Vector3 ** mesh_normal_data;
+    gpuErrchk(cudaMallocManaged(&mesh_vertex_data, sizeof(Vector3 *)));
+    gpuErrchk(cudaMallocManaged(&mesh_normal_data, sizeof(Vector3 *)));
+    
+    std::string obj_file_name = "models/cube.obj";
+    loadOBJ(obj_file_name, mesh_vertex_data, mesh_normal_data);
+
 
     // Creating the required arrays for starting the rendering sequence
     int wid_cuda = 1200, hgt_cuda = 800;
