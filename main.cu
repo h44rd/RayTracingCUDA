@@ -119,16 +119,16 @@ void initializeWorld(World ** world, int w, int h, unsigned char ** array_of_ima
     Vector3 normal(0, 1.0, 0.0);
     Plane * p = new Plane(normal, point, color2);
     p->setMaterial(*m2);
-    // (*world)->addVisibleObject(p);
+    (*world)->addVisibleObject(p);
 
     Vector3 color3(0.1f, 0.2f, 0.8f);
     Vector3 point2(4.5, 0.0, 0.0);
     Vector3 normal2(-1.0, 0.2, 0.2f);
     Plane * p2 = new Plane(normal2, point2, color3);
     p2->setMaterial(*m2);
-    (*world)->addVisibleObject(p2);
+    // (*world)->addVisibleObject(p2);
 
-    Vector3 positioncam(-3.0, 0.0, 2.0);
+    Vector3 positioncam(-3.0, 0.0, 10.0);
     Vector3 lookat(0.0f, 0.0f, 0.0f);
     Vector3 direction = lookat - positioncam;
     Vector3 updir(0.0, 1.0, 0.0);
@@ -271,7 +271,7 @@ int main(int argc, char *argv[]) {
     gpuErrchk(cudaMallocManaged(&mesh_vertex_data, sizeof(Vector3 *)));
     gpuErrchk(cudaMallocManaged(&mesh_normal_data, sizeof(Vector3 *)));
     
-    std::string obj_file_name = "models/cube.obj";
+    std::string obj_file_name = "models/tetrahedron.obj";
     int no_of_triangles = loadOBJ(obj_file_name, mesh_vertex_data, mesh_normal_data);
 
 

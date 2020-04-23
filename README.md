@@ -5,6 +5,9 @@
 ### Latest Render
 ![Lastest Render](out.jpg)
 
+### Tetrahedron
+![Mesh](outputs/tetrahedron.jpg)
+
 ### Mesh
 ![Mesh](outputs/mesh.jpg)
 
