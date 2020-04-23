@@ -5,6 +5,8 @@
 ### Latest Render
 ![Lastest Render](out.jpg)
 
+### Mesh
+![Mesh](outputs/mesh.jpg)
 
 ### Textures Final
 ![Textures](outputs/texture2.jpg)
