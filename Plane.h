@@ -25,6 +25,7 @@
 
 #include "Vector3.h"
 #include "VisibleObject.h"
+#include "Helpers.h"
 
 class Plane : public VisibleObject {
     private:
@@ -38,6 +39,7 @@ class Plane : public VisibleObject {
     public:
         __host__ __device__ Plane();
         __host__ __device__ Plane(Vector3& normal, Vector3& point, Vector3& color);
+        __host__ __device__ Plane(Vector3& normal, Vector3& point);
         __host__ __device__ ~Plane();
 
         // The function will return a Vector3 with x : Parameter t, y : slope of hit, z : if hit (+ve if hit, -ve otherwise)
@@ -47,6 +49,8 @@ class Plane : public VisibleObject {
         __host__ __device__ Vector3 getNormalAtPoint(Vector3& point) const { return n_0; }
 
         __device__ Vector3 getColor(Vector3& point) const;
+
+        __host__ __device__ int getTypeID() { return PLANE_TYPE_ID; }
 };
 
 __host__ __device__ Plane::Plane() {}
@@ -70,6 +74,11 @@ __host__ __device__ Plane::Plane(Vector3& normal, Vector3& point, Vector3& color
 
     sx = 20.0f;
     sy = 20.0f;
+}
+
+__host__ __device__ Plane::Plane(Vector3& normal, Vector3& point) : p_i(point) {
+    n_0 = normal;
+    n_0.make_unit_vector();
 }
 
 __host__ __device__ Plane::~Plane() {}
@@ -100,6 +109,7 @@ __host__ __device__ Vector3 Plane::getIntersectInfo(const Ray& incoming) const {
     }
 
     intersection[0] = t;
+    intersection[1] = -1;
     intersection[2] = ifIntersect;
 
     return intersection;

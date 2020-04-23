@@ -46,6 +46,8 @@ class Sphere : public VisibleObject {
 
         // The color
         __device__ Vector3 getColor(Vector3& point) const;
+
+        __device__ __host__ int getTypeID() { return SPHERE_TYPE_ID; }
 };
 
 __host__ __device__ Sphere::Sphere() {}
@@ -103,6 +105,7 @@ __host__ __device__ Vector3 Sphere::getIntersectInfo(const Ray& incoming) const 
     std::cout<<"Sphere t: "<<t<<std::endl;
     #endif
     intersection[0] = t;
+    intersection[1] = -1;
     intersection[2] = ifIntersect;
 
     return intersection;  

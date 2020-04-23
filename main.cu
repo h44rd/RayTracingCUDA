@@ -16,14 +16,15 @@
 //
 // ----------------------------------------------------------------------------------------------------
 
-#define MESHDEBUG
+// #define MESHDEBUG
 // #define MATERIALDEBUG
 // #define AREALIGHTDEBUG
 // #define SHADOWDEBUG
 // #define CUDADEBUG
 // #define RENDERDEBUG
-// #define ACTUALRENDER
 // #define INITDEBUG
+
+#define ACTUALRENDER
 
 #include <iostream>
 #include <math.h>
@@ -40,6 +41,7 @@
 
 #include "Sphere.h"
 #include "Plane.h"
+#include "TriangularMesh.h"
 #include "PointLight.h"
 #include "DirectionalLight.h"
 #include "SpotLight.h"
@@ -82,17 +84,17 @@ void initializeWorld(World ** world, int w, int h, unsigned char ** array_of_ima
     float r = 0.5f;
     Sphere * s = new Sphere(center, r, color);
     s->setMaterial(*m3);
-    (*world)->addVisibleObject(s);
+    // (*world)->addVisibleObject(s);
 
     Vector3 color5(1.0f, 0.0f, 0.1f);
     Vector3 center2(0.5, 0.0, 0.0);
     float r2 = 1.5f;
     Sphere * s2 = new Sphere(center2, r2, color5);
     s2->setMaterial(*m1);
-    (*world)->addVisibleObject(s2);
+    // (*world)->addVisibleObject(s2);
 
     float beam_angle = 10.0;
-    float falloff_angle = 30.0;
+    float falloff_angle = 180.0;
     beam_angle = beam_angle * PI / 180.0;
     falloff_angle = falloff_angle * PI / 180.0;
     Vector3 spotlightpos(-3.0, 3.0, 0.0f);
@@ -103,13 +105,13 @@ void initializeWorld(World ** world, int w, int h, unsigned char ** array_of_ima
     Vector3 spotlightpos2(-4.0f, 0.0, 0.0);
     Vector3 spotlightdir2 = - spotlightpos2;
     SpotLight * spotlight2 = new SpotLight(spotlightpos2, spotlightdir2, beam_angle, falloff_angle);
-    // (*world)->addLight(spotlight2);
+    (*world)->addLight(spotlight2);
 
     Vector3 area_light_pos(-4.0, 2.0, 0);
     Vector3 area_light_dir = - area_light_pos;
     Vector3 area_light_up(0.0, 1.0, 0.0);
     AreaLight * areaLigth = new AreaLight(area_light_pos, area_light_dir, area_light_up, 0.1, 0.1);
-    (*world)->addLight(areaLigth);
+    // (*world)->addLight(areaLigth);
 
 
     Vector3 color2(0.5f, 1.0f, 0.25f);
@@ -117,21 +119,21 @@ void initializeWorld(World ** world, int w, int h, unsigned char ** array_of_ima
     Vector3 normal(0, 1.0, 0.0);
     Plane * p = new Plane(normal, point, color2);
     p->setMaterial(*m2);
-    (*world)->addVisibleObject(p);
+    // (*world)->addVisibleObject(p);
 
     Vector3 color3(0.1f, 0.2f, 0.8f);
-    Vector3 point2(2.5, 0.0, 0.0);
+    Vector3 point2(4.5, 0.0, 0.0);
     Vector3 normal2(-1.0, 0.2, 0.2f);
     Plane * p2 = new Plane(normal2, point2, color3);
     p2->setMaterial(*m2);
     (*world)->addVisibleObject(p2);
 
-    Vector3 positioncam(-3.0, 0.0, 4.0);
+    Vector3 positioncam(-3.0, 0.0, 2.0);
     Vector3 lookat(0.0f, 0.0f, 0.0f);
     Vector3 direction = lookat - positioncam;
     Vector3 updir(0.0, 1.0, 0.0);
     float aspect_ratio = (float(w))/(float(h));
-    float distance_from_screen = 0.7;
+    float distance_from_screen = 1.0;
     Camera * cam = new Camera(positioncam, direction, updir, aspect_ratio, 1.0, distance_from_screen);
     (*world)->setCamera(*cam);
 }
@@ -156,6 +158,27 @@ void addWorldToEngine(int w, int h, RenderEngine ** r_engine, World ** world, in
     (* r_engine)->setAntiAliasing(samples);
 }
 
+__global__
+void addMeshToWorld(World ** world, Vector3 * mesh_vertex_data, Vector3 * mesh_normal_data, int no_of_triangles, unsigned char ** array_of_images, int * img_w, int * img_h, int * img_chns, int n_imgs) {
+    Vector3 center(0.0f, 0.0f, 0.0f);
+    Vector3 color(0.0f, 0.0f, 1.0f);
+
+    #ifdef MESHDEBUG
+    for(int i = 0; i < no_of_triangles * 3; i++) {
+        printf("i: %d V: %f %f %f\n", i, mesh_vertex_data[i].x(), mesh_vertex_data[i].y(), mesh_vertex_data[i].z());
+    }
+    for(int i = 0; i < no_of_triangles * 3; i++) {
+        printf("i: %d N: %f %f %f\n", i, mesh_normal_data[i].x(), mesh_normal_data[i].y(), mesh_normal_data[i].z());
+    }
+    #endif
+
+    TextureMaterial * m1 = new TextureMaterial();
+    m1->setColorImage(img_w[0], img_h[0], img_chns[0], array_of_images[0]);
+
+    TriangularMesh * t_mesh = new TriangularMesh(center, color, mesh_vertex_data, mesh_normal_data, no_of_triangles);
+    t_mesh->setMaterial(*m1);
+    (*world)->addVisibleObject(t_mesh);
+}
 
 
 /*  Function: Parallelize Render for each pixels
@@ -242,19 +265,20 @@ int main(int argc, char *argv[]) {
         gpuErrchk(cudaMemcpy(temp_array[i], host_imgs[i], img_w[i] * img_h[i] * img_chns[i] * sizeof(unsigned char), cudaMemcpyHostToDevice)); // copy image to device
     }
     
+    // Loading Meshes and Normals
     Vector3 ** mesh_vertex_data; 
     Vector3 ** mesh_normal_data;
     gpuErrchk(cudaMallocManaged(&mesh_vertex_data, sizeof(Vector3 *)));
     gpuErrchk(cudaMallocManaged(&mesh_normal_data, sizeof(Vector3 *)));
     
     std::string obj_file_name = "models/cube.obj";
-    loadOBJ(obj_file_name, mesh_vertex_data, mesh_normal_data);
+    int no_of_triangles = loadOBJ(obj_file_name, mesh_vertex_data, mesh_normal_data);
 
 
     // Creating the required arrays for starting the rendering sequence
     int wid_cuda = 1200, hgt_cuda = 800;
 
-    int samples = 32;
+    int samples = 16;
 
     Vector3 * frame_buffer_cuda;
     gpuErrchk(cudaMallocManaged(&frame_buffer_cuda, wid_cuda * hgt_cuda * sizeof(Vector3)));
@@ -271,6 +295,10 @@ int main(int argc, char *argv[]) {
     gpuErrchk(cudaMallocManaged(&r_engine_cuda, sizeof(RenderEngine *)));
 
     initializeWorld<<<1, 1>>>(world_cuda, wid_cuda, hgt_cuda, array_of_images, img_w_d, img_h_d, img_chns_d, n_imgs);
+    gpuErrchk(cudaPeekAtLastError());
+    gpuErrchk(cudaDeviceSynchronize());
+
+    addMeshToWorld<<<1, 1>>>(world_cuda, *mesh_vertex_data, *mesh_normal_data, no_of_triangles, array_of_images, img_w_d, img_h_d, img_chns_d, n_imgs);
     gpuErrchk(cudaPeekAtLastError());
     gpuErrchk(cudaDeviceSynchronize());
 

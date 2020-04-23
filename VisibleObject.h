@@ -25,6 +25,7 @@
 #include "Vector3.h"
 #include "Ray.h"
 #include "Material.h"
+#include "Helpers.h"
 
 class VisibleObject
 {
@@ -43,6 +44,12 @@ class VisibleObject
         __host__ __device__ virtual Vector3 getNormalAtPoint(Vector3& point) const;  
 
         __device__ virtual Vector3 getColor(Vector3& point) const;
+
+        __host__ __device__ virtual int getTypeID() const { return PLANE_TYPE_ID; }
+
+        // For traingular meshes
+        __host__ __device__ virtual Vector3 getNormalAtPoint(Vector3& point, int id_triangle) const { return Vector3(0.0f, 0.0f, 0.0f); };
+        __device__ virtual Vector3 getColor(Vector3& point, int id_triangle) const { return Vector3(0.0f, 0.0f, 0.0f); };
 
     protected:
         Material * m = NULL; // Material of the object

@@ -53,13 +53,15 @@ class RenderEngine {
 
         __device__ inline float getTFromIntersectInfo(const Vector3& intersectInfo) { return intersectInfo[0]; }
 
+        __device__ inline int getTriangleIDFromIntersectInfo(const Vector3& intersectInfo) { return int(intersectInfo[1]); }
+
     public:
         __device__ RenderEngine();
         __device__ RenderEngine(int width, int height, World& world_p);
         __device__ ~RenderEngine();
 
         __device__ Vector3 render(float u, float v, curandState& rand_state); //Renders the point u,v on the screen (0 <= u,v <= 1)
-        __device__ Vector3 computeColor(VisibleObject* closest_object, Ray& eye_ray, Vector3& t, curandState& rand_state); // Compute color given the closest object
+        __device__ Vector3 computeColor(VisibleObject* closest_object, Ray& eye_ray, Vector3& t, curandState& rand_state, Vector3& extraIntersectInfo); // Compute color given the closest object
 
         __device__ Vector3 renderPixel(int i, int j, curandState& rand_state); // Renders the pixel i,j
 
@@ -98,6 +100,7 @@ __device__ Vector3 RenderEngine::render(float u, float v, curandState& rand_stat
     float min_t = 0.0f;
     bool if_t_encountered = false;
     Vector3 intersectInfo;
+    Vector3 extraIntersectInfo(0.0f, 0.0f, 0.0f);
 
     VisibleObject * closest_object;
 
@@ -112,10 +115,12 @@ __device__ Vector3 RenderEngine::render(float u, float v, curandState& rand_stat
         if( !if_t_encountered && intersectInfo[2] > 0.0f) {
             if_t_encountered = true;
             min_t = intersectInfo[0];
+            extraIntersectInfo = intersectInfo;
             closest_object = world->getVisibleObject(i);
         } else if(if_t_encountered && intersectInfo[2] > 0.0f) {
             if(min_t > intersectInfo[0]) {
                 min_t = intersectInfo[0];
+                extraIntersectInfo = intersectInfo;
                 closest_object = world->getVisibleObject(i);
             }
         }
@@ -128,7 +133,7 @@ __device__ Vector3 RenderEngine::render(float u, float v, curandState& rand_stat
     
     Vector3 point_of_intersection = eye_ray.getPoint(min_t);
 
-    return computeColor(closest_object, eye_ray, point_of_intersection, rand_state);
+    return computeColor(closest_object, eye_ray, point_of_intersection, rand_state, extraIntersectInfo);
 }
 
 /*  Function: computeColor
@@ -143,14 +148,31 @@ __device__ Vector3 RenderEngine::render(float u, float v, curandState& rand_stat
 //	Return:
 //      Vector3 color
 */
-__device__ Vector3 RenderEngine::computeColor(VisibleObject* closest_object, Ray& eye_ray, Vector3& point_of_intersection, curandState& rand_state) {
+__device__ Vector3 RenderEngine::computeColor(VisibleObject* closest_object, Ray& eye_ray, Vector3& point_of_intersection, curandState& rand_state, Vector3& extraIntersectInfo) {
     
     int total_lights = world->getTotalLights();
 
     Vector3 normal = closest_object->getNormalAtPoint(point_of_intersection);
+
+    // Special case for Triangular Mesh    
+    if(closest_object->getTypeID() == TMESH_TYPE_ID) {
+        normal = closest_object->getNormalAtPoint(point_of_intersection, getTriangleIDFromIntersectInfo(extraIntersectInfo));
+        #ifdef MESHDEBUG
+            // printf("RenderNormal: %f %f %f\n", normal.x(), normal.y(), normal.z());
+            printf("Intersection Mesh: %f %f %f\n", point_of_intersection.x(), point_of_intersection.y(), point_of_intersection.z());
+            // printf("RenderExtraInInfo: %f %f %f\n", extraIntersectInfo.x(), extraIntersectInfo.y(), extraIntersectInfo.z());
+        #endif
+    }
+
     normal.make_unit_vector();
+    
 
     Vector3 object_color = closest_object->getColor(point_of_intersection);
+
+    // Special casee for Triangular Mesh
+    if(closest_object->getTypeID() == TMESH_TYPE_ID) {
+        object_color = closest_object->getColor(point_of_intersection, getTriangleIDFromIntersectInfo(extraIntersectInfo));
+    }
 
     Vector3 final_object_color(0.0, 0.0, 0.0);
     Vector3 specular_light_color(1.0, 1.0, 1.0);
@@ -227,7 +249,9 @@ __device__ Vector3 RenderEngine::computeColor(VisibleObject* closest_object, Ray
         #endif  
     }
 
-    final_object_color = final_object_color / total_lights;
+    if(total_lights > 0) {
+        final_object_color = final_object_color / total_lights;
+    }
 
     // Computing border parameter
 
@@ -274,13 +298,16 @@ __device__ float RenderEngine::computeShadowIntensityAtPoint(Vector3 point_of_in
             t_from_light = getTFromIntersectInfo(intersectInfo_from_light);
             t_from_object = getTFromIntersectInfo(intersectInfo_from_object);
 
-            if(t_from_object < distance_intersection_light && t_from_object >  EPSILON) { // If the ray does not go beyond the light position
+            if(t_from_object < distance_intersection_light && t_from_object >  0.0001) { // If the ray does not go beyond the light position
                                                                                           // Also checking if the distance from the object is not 0 (it is not intersecting with itself)
                 shadow_intensity += (distance_intersection_light - t_from_light - t_from_object) / distance_intersection_light; 
                 hit_objects++;
 
                 #ifdef SHADOWDEBUG
                     printf("Shadow Intensity Inside Function: %f %f %f %f\n", shadow_intensity, t_from_light, t_from_object, distance_intersection_light);
+                #endif
+                #ifdef MESHDEBUG
+                    // printf("Shadow Intensity Inside Function: %f %f %f %f Type: %d Triangle: %f %f\n", shadow_intensity, t_from_light, t_from_object, distance_intersection_light, (world->getVisibleObject(i))->getTypeID(), intersectInfo_from_light[1], intersectInfo_from_object[1]);
                 #endif
             }
         }

@@ -7,6 +7,9 @@
 #define PI 3.1415927
 #define EPSILON 0.0000001 // A very small number
 #define LARGENUMBER 1000
+#define SPHERE_TYPE_ID 1
+#define PLANE_TYPE_ID 2
+#define TMESH_TYPE_ID 3
 
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
@@ -34,6 +37,10 @@ __host__ __device__ float smoothstep(float edge0, float edge1, float x) {
     // Evaluate polynomial
     return x * x * (3 - 2 * x);
 }
+
+__host__ __device__ inline bool ifRayIntersected(const Vector3& intersectInfo) { return (intersectInfo[2] > 0.0f); }
+
+__host__ __device__ inline float getTFromIntersectInfo(const Vector3& intersectInfo) { return intersectInfo[0]; }
 
 __host__ void makeImage(Vector3 * frame_buffer, int w, int h) {
     // Output Pixel as Image
@@ -72,8 +79,9 @@ __host__ void makeImage(Vector3 * frame_buffer, int w, int h) {
     }
 }
 
-// vertex_data and normal_data will be appropriately initialized;
-void loadOBJ(std::string  file_name, Vector3 ** vertex_data, Vector3 ** normal_data) {
+// vertex_data and normal_data will be appropriately initialized
+// Returns number of triangles
+int loadOBJ(std::string  file_name, Vector3 ** vertex_data, Vector3 ** normal_data) {
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> materials;
@@ -100,7 +108,6 @@ void loadOBJ(std::string  file_name, Vector3 ** vertex_data, Vector3 ** normal_d
 
     for (size_t s = 0; s < shapes.size(); s++) {
         // Loop over faces(polygon)
-        size_t index_offset = 0;
         for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) {
             int fv = shapes[s].mesh.num_face_vertices[f];
             total_traingles_verts += fv;
@@ -161,6 +168,8 @@ void loadOBJ(std::string  file_name, Vector3 ** vertex_data, Vector3 ** normal_d
 
     *vertex_data = vertex_data_array;
     *normal_data = normal_data_array;
+
+    return int(total_traingles_verts / 3);
 }
 
 #endif
