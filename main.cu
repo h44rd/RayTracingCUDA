@@ -102,7 +102,7 @@ void initializeWorld(World ** world, int w, int h, unsigned char ** array_of_ima
     SpotLight * spotlight = new SpotLight(spotlightpos, spotlightdir, beam_angle, falloff_angle);
     // (*world)->addLight(spotlight);
 
-    Vector3 spotlightpos2(-4.0f, 0.0, 0.0);
+    Vector3 spotlightpos2(-4.0f, 0.0, 3.0);
     Vector3 spotlightdir2 = - spotlightpos2;
     SpotLight * spotlight2 = new SpotLight(spotlightpos2, spotlightdir2, beam_angle, falloff_angle);
     (*world)->addLight(spotlight2);
