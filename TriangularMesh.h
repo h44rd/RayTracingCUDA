@@ -120,7 +120,7 @@ __host__ __device__ Vector3 TriangularMesh::getIntersectInfo(const Ray& incoming
         }
     }
 
-    intersection[0] = t;
+    intersection[0] = ray_t;
     intersection[1] = id_triangle;
     intersection[2] = if_intersect;
 

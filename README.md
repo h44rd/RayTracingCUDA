@@ -1,12 +1,15 @@
 # Ray Tracing in CUDA C++
 
-## Some results for Shadows
+## Some results for Meshes
 
 ### Latest Render
 ![Lastest Render](out.jpg)
 
 ### Tetrahedron
 ![Mesh](outputs/tetrahedron.jpg)
+
+### Torus Knot
+![Mesh](outputs/TorusKnot.jpg)
 
 ### Mesh
 ![Mesh](outputs/mesh.jpg)

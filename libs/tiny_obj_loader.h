@@ -2087,11 +2087,11 @@ bool MaterialFileReader::operator()(const std::string &matId,
     }
 
     std::stringstream ss;
-    ss << "Material file [ " << matId
-       << " ] not found in a path : " << m_mtlBaseDir << std::endl;
-    if (warn) {
-      (*warn) += ss.str();
-    }
+    // ss << "Material file [ " << matId
+    //    << " ] not found in a path : " << m_mtlBaseDir << std::endl;
+    // if (warn) {
+    //   (*warn) += ss.str();
+    // }
     return false;
 
   } else {
@@ -2103,12 +2103,12 @@ bool MaterialFileReader::operator()(const std::string &matId,
       return true;
     }
 
-    std::stringstream ss;
-    ss << "Material file [ " << filepath
-       << " ] not found in a path : " << m_mtlBaseDir << std::endl;
-    if (warn) {
-      (*warn) += ss.str();
-    }
+    // std::stringstream ss;
+    // ss << "Material file [ " << filepath
+    //    << " ] not found in a path : " << m_mtlBaseDir << std::endl;
+    // if (warn) {
+    //   (*warn) += ss.str();
+    // }
 
     return false;
   }
@@ -2390,9 +2390,9 @@ bool LoadObj(attrib_t *attrib, std::vector<shape_t> *shapes,
         newMaterialId = it->second;
       } else {
         // { error!! material not found }
-        if (warn) {
-          (*warn) += "material [ '" + namebuf + "' ] not found in .mtl\n";
-        }
+        // if (warn) {
+        //   (*warn) += "material [ '" + namebuf + "' ] not found in .mtl\n";
+        // }
       }
 
       if (newMaterialId != material) {
@@ -2417,14 +2417,14 @@ bool LoadObj(attrib_t *attrib, std::vector<shape_t> *shapes,
         SplitString(std::string(token), ' ', filenames);
 
         if (filenames.empty()) {
-          if (warn) {
-            std::stringstream ss;
-            ss << "Looks like empty filename for mtllib. Use default "
-                  "material (line "
-               << line_num << ".)\n";
+          // if (warn) {
+          //   std::stringstream ss;
+          //   ss << "Looks like empty filename for mtllib. Use default "
+          //         "material (line "
+          //      << line_num << ".)\n";
 
-            (*warn) += ss.str();
-          }
+          //   // (*warn) += ss.str();
+          // }
         } else {
           bool found = false;
           for (size_t s = 0; s < filenames.size(); s++) {
@@ -2447,11 +2447,11 @@ bool LoadObj(attrib_t *attrib, std::vector<shape_t> *shapes,
           }
 
           if (!found) {
-            if (warn) {
-              (*warn) +=
-                  "Failed to load material file(s). Use default "
-                  "material.\n";
-            }
+            // if (warn) {
+            //   (*warn) +=
+            //       "Failed to load material file(s). Use default "
+            //       "material.\n";
+            // }
           }
         }
       }
@@ -2824,11 +2824,11 @@ bool LoadObjWithCallback(std::istream &inStream, const callback_t &callback,
         SplitString(std::string(token), ' ', filenames);
 
         if (filenames.empty()) {
-          if (warn) {
-            (*warn) +=
-                "Looks like empty filename for mtllib. Use default "
-                "material. \n";
-          }
+          // if (warn) {
+          //   (*warn) +=
+          //       "Looks like empty filename for mtllib. Use default "
+          //       "material. \n";
+          // }
         } else {
           bool found = false;
           for (size_t s = 0; s < filenames.size(); s++) {
@@ -2852,11 +2852,11 @@ bool LoadObjWithCallback(std::istream &inStream, const callback_t &callback,
           }
 
           if (!found) {
-            if (warn) {
-              (*warn) +=
-                  "Failed to load material file(s). Use default "
-                  "material.\n";
-            }
+            // if (warn) {
+            //   (*warn) +=
+            //       "Failed to load material file(s). Use default "
+            //       "material.\n";
+            // }
           } else {
             if (callback.mtllib_cb) {
               callback.mtllib_cb(user_data, &materials.at(0),
