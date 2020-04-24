@@ -12,7 +12,10 @@
 ![Mesh](outputs/TorusKnot.jpg)
 
 ### Mesh
-![Mesh](outputs/mesh.jpg)
+![Mesh](outputs/cube.jpg)
+
+### Mesh 2
+![Mesh](outputs/cubeTexture.jpg)
 
 ### Textures Final
 ![Textures](outputs/texture2.jpg)
