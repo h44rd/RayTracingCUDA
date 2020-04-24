@@ -11,6 +11,9 @@
 ### Torus Knot
 ![Mesh](outputs/TorusKnot.jpg)
 
+### Torus Knot
+![Mesh](outputs/TorusKnotTexture.jpg)
+
 ### Mesh
 ![Mesh](outputs/cube.jpg)
 

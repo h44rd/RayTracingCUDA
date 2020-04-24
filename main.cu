@@ -128,7 +128,7 @@ void initializeWorld(World ** world, int w, int h, unsigned char ** array_of_ima
     p2->setMaterial(*m2);
     (*world)->addVisibleObject(p2);
 
-    Vector3 positioncam(-3.0, 2.0, 2.0);
+    Vector3 positioncam(-3.0, 2.0, 3.0);
     Vector3 lookat(0.0f, 0.0f, 0.0f);
     Vector3 direction = lookat - positioncam;
     Vector3 updir(0.0, 1.0, 0.0);
@@ -271,14 +271,14 @@ int main(int argc, char *argv[]) {
     gpuErrchk(cudaMallocManaged(&mesh_vertex_data, sizeof(Vector3 *)));
     gpuErrchk(cudaMallocManaged(&mesh_normal_data, sizeof(Vector3 *)));
     
-    std::string obj_file_name = "models/cube.obj";
+    std::string obj_file_name = "models/spiral/simple-obj.obj";
     int no_of_triangles = loadOBJ(obj_file_name, mesh_vertex_data, mesh_normal_data);
 
 
     // Creating the required arrays for starting the rendering sequence
     int wid_cuda = 1200, hgt_cuda = 800;
 
-    int samples = 8;
+    int samples = 2;
 
     Vector3 * frame_buffer_cuda;
     gpuErrchk(cudaMallocManaged(&frame_buffer_cuda, wid_cuda * hgt_cuda * sizeof(Vector3)));
