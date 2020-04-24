@@ -128,7 +128,7 @@ void initializeWorld(World ** world, int w, int h, unsigned char ** array_of_ima
     p2->setMaterial(*m2);
     (*world)->addVisibleObject(p2);
 
-    Vector3 positioncam(-3.0, 2.0, 3.0);
+    Vector3 positioncam(0.0, 0.0, 3.0);
     Vector3 lookat(0.0f, 0.0f, 0.0f);
     Vector3 direction = lookat - positioncam;
     Vector3 updir(0.0, 1.0, 0.0);
