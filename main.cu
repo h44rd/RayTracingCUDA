@@ -84,14 +84,14 @@ void initializeWorld(World ** world, int w, int h, unsigned char ** array_of_ima
     float r = 0.5f;
     Sphere * s = new Sphere(center, r, color);
     s->setMaterial(*m3);
-    // (*world)->addVisibleObject(s);
+    (*world)->addVisibleObject(s);
 
     Vector3 color5(1.0f, 0.0f, 0.1f);
     Vector3 center2(0.5, 0.0, 0.0);
     float r2 = 1.5f;
     Sphere * s2 = new Sphere(center2, r2, color5);
     s2->setMaterial(*m1);
-    // (*world)->addVisibleObject(s2);
+    (*world)->addVisibleObject(s2);
 
     float beam_angle = 10.0;
     float falloff_angle = 180.0;
@@ -177,7 +177,7 @@ void addMeshToWorld(World ** world, Vector3 * mesh_vertex_data, Vector3 * mesh_n
 
     TriangularMesh * t_mesh = new TriangularMesh(center, color, mesh_vertex_data, mesh_normal_data, no_of_triangles);
     t_mesh->setMaterial(*m1);
-    (*world)->addVisibleObject(t_mesh);
+    // (*world)->addVisibleObject(t_mesh);
 }
 
 
@@ -278,7 +278,7 @@ int main(int argc, char *argv[]) {
     // Creating the required arrays for starting the rendering sequence
     int wid_cuda = 1200, hgt_cuda = 800;
 
-    int samples = 2;
+    int samples = 1;
 
     Vector3 * frame_buffer_cuda;
     gpuErrchk(cudaMallocManaged(&frame_buffer_cuda, wid_cuda * hgt_cuda * sizeof(Vector3)));
