@@ -89,10 +89,17 @@ __host__ __device__ Vector3 Sphere::getIntersectInfo(const Ray& incoming) const 
     float t = 0.0f;
     float slope = 0.0f;
     float ifIntersect = 0.0f;
+    float ifInside = -1.0f;
 
     // Checking if the ray intersects AND b <= 0 makes sure that the ray is not pointing away from the center of the sphere
     if(discriminant > 0.0f && b <= 0.0f) {
         t = -1.0f * b - sqrt(discriminant);
+
+        if(t <= 0.0f) {
+            t = -1.0f * b + sqrt(discriminant);
+            ifInside = 1.0f;
+        }
+
         ifIntersect = 1.0;
     } else {
         t = -1.0;
@@ -105,7 +112,7 @@ __host__ __device__ Vector3 Sphere::getIntersectInfo(const Ray& incoming) const 
     std::cout<<"Sphere t: "<<t<<std::endl;
     #endif
     intersection[0] = t;
-    intersection[1] = -1;
+    intersection[1] = ifInside;
     intersection[2] = ifIntersect;
 
     return intersection;  

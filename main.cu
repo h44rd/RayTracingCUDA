@@ -83,18 +83,18 @@ void initializeWorld(World ** world, int w, int h, unsigned char ** array_of_ima
     Vector3 center(-2.0, 0.0, 0.0);
     float r = 0.5f;
     Sphere * s = new Sphere(center, r, color);
-    s->setMaterial(*m3);
+    // s->setMaterial(*m2);
     (*world)->addVisibleObject(s);
 
     Vector3 color5(1.0f, 0.0f, 0.1f);
     Vector3 center2(0.5, 0.0, 0.0);
     float r2 = 1.5f;
     Sphere * s2 = new Sphere(center2, r2, color5);
-    s2->setMaterial(*m1);
+    // s2->setMaterial(*m1);
     (*world)->addVisibleObject(s2);
 
-    float beam_angle = 10.0;
-    float falloff_angle = 180.0;
+    float beam_angle = 40.0;
+    float falloff_angle = 10.0;
     beam_angle = beam_angle * PI / 180.0;
     falloff_angle = falloff_angle * PI / 180.0;
     Vector3 spotlightpos(-3.0, 3.0, 0.0f);
@@ -118,22 +118,22 @@ void initializeWorld(World ** world, int w, int h, unsigned char ** array_of_ima
     Vector3 point(0.0, -2.5, 0.0);
     Vector3 normal(0, 1.0, 0.0);
     Plane * p = new Plane(normal, point, color2);
-    p->setMaterial(*m2);
+    // p->setMaterial(*m3);
     (*world)->addVisibleObject(p);
 
     Vector3 color3(0.1f, 0.2f, 0.8f);
     Vector3 point2(4.5, 0.0, 0.0);
-    Vector3 normal2(-1.0, 0.2, 0.2f);
+    Vector3 normal2(-1.0, 0.0, 0.0f);
     Plane * p2 = new Plane(normal2, point2, color3);
-    p2->setMaterial(*m2);
+    // p2->setMaterial(*m3);
     (*world)->addVisibleObject(p2);
 
-    Vector3 positioncam(0.0, 0.0, 3.0);
+    Vector3 positioncam(-2.0, 0.0, 3.0);
     Vector3 lookat(0.0f, 0.0f, 0.0f);
     Vector3 direction = lookat - positioncam;
     Vector3 updir(0.0, 1.0, 0.0);
     float aspect_ratio = (float(w))/(float(h));
-    float distance_from_screen = 1.0;
+    float distance_from_screen = 0.70;
     Camera * cam = new Camera(positioncam, direction, updir, aspect_ratio, 1.0, distance_from_screen);
     (*world)->setCamera(*cam);
 }
@@ -271,14 +271,14 @@ int main(int argc, char *argv[]) {
     gpuErrchk(cudaMallocManaged(&mesh_vertex_data, sizeof(Vector3 *)));
     gpuErrchk(cudaMallocManaged(&mesh_normal_data, sizeof(Vector3 *)));
     
-    std::string obj_file_name = "models/spiral/simple-obj.obj";
+    std::string obj_file_name = "models/cube.obj";
     int no_of_triangles = loadOBJ(obj_file_name, mesh_vertex_data, mesh_normal_data);
 
 
     // Creating the required arrays for starting the rendering sequence
     int wid_cuda = 1200, hgt_cuda = 800;
 
-    int samples = 1;
+    int samples = 64;
 
     Vector3 * frame_buffer_cuda;
     gpuErrchk(cudaMallocManaged(&frame_buffer_cuda, wid_cuda * hgt_cuda * sizeof(Vector3)));

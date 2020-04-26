@@ -47,6 +47,7 @@ class RenderEngine {
         float border_thinkness;
 
         int recursive_steps;
+        int iterative_ray_steps;
 
         // Given a point and a light, compute how much the ray from the point to the light crosses any other object
         __device__ float computeShadowIntensityAtPoint(Vector3 point_of_intersection, Light * light);
@@ -54,6 +55,8 @@ class RenderEngine {
         __device__ inline bool ifRayIntersected(const Vector3& intersectInfo) { return (intersectInfo[2] > 0.0f); }
 
         __device__ inline float getTFromIntersectInfo(const Vector3& intersectInfo) { return intersectInfo[0]; }
+
+        __device__ inline float ifIntersectPointInside(const Vector3& intersectInfo) { return (intersectInfo[1] > 0.0f); }
 
         __device__ inline int getTriangleIDFromIntersectInfo(const Vector3& intersectInfo) { return int(intersectInfo[1]); }
 
@@ -65,8 +68,10 @@ class RenderEngine {
         __device__ Vector3 render(float u, float v, curandState& rand_state); //Renders the point u,v on the screen (0 <= u,v <= 1)
         __device__ Vector3 computeColor(VisibleObject* closest_object, Ray& eye_ray, Vector3& t, curandState& rand_state, Vector3& extraIntersectInfo); // Compute color given the closest object
 
-        // Computes color recursively
+        // Computes color iteratively
         __device__ Vector3 rayTrace(Ray incoming_ray, int rec_steps, curandState& rand_state);
+
+        __device__ bool getHitObject(Ray incoming_ray, VisibleObject* & object, Vector3& intersectInfo);
 
         __device__ Vector3 renderPixel(int i, int j, curandState& rand_state); // Renders the pixel i,j
 
@@ -94,6 +99,7 @@ __device__ RenderEngine::RenderEngine(int width, int height, World& world_p) : w
     if_border = false;
     border_thinkness = 0.6;
     recursive_steps = 3;
+    iterative_ray_steps = 3;
 }
 
 __device__ RenderEngine::~RenderEngine() {}
@@ -101,22 +107,81 @@ __device__ RenderEngine::~RenderEngine() {}
 __device__ Vector3 RenderEngine::render(float u, float v, curandState& rand_state) {
     Ray eye_ray = camera->getRay(u, v);
 
-    return rayTrace(eye_ray, recursive_steps, rand_state);
+    return rayTrace(eye_ray, iterative_ray_steps, rand_state);
 }
 
-__device__ Vector3 RenderEngine::rayTrace(Ray incoming_ray, int rec_steps, curandState& rand_state) {
-    if(rec_steps <= 0) {
-        return Vector3(0.0f, 0.0f, 0.0f);
-    }
+__device__ Vector3 RenderEngine::rayTrace(Ray incoming_ray, int steps, curandState& rand_state) {
+    Vector3 final_color(0.0f, 0.0f, 0.0f);
 
+    Ray current_ray = incoming_ray;
+
+    float out_ri = 1.0f; // Outer refractive index
+    float inner_ri = 1.3; // Innter refractive index
+
+    // TEMPORARY ONLY
+    float idx_refr = 0.6;
+
+    Vector3 intersectInfo;
+
+    VisibleObject * closest_object;
+
+    Vector3 point_of_intersection, normal, refl_dir, refr_dir, ray_dir;
+    float min_t;
+    Ray reflected_ray, refracted_ray;
+
+    curandState rand_state_pixel = rand_state;
+    float lambda = 0.5;
+    double lambda_acc = 1; // Accumalates the lambda factor 
+    for(int i = 0; i < steps; i++) {
+        bool if_intersected = getHitObject(current_ray, closest_object, intersectInfo);
+        if(if_intersected) {
+            min_t = getTFromIntersectInfo(intersectInfo);
+            point_of_intersection = current_ray.getPoint(min_t);
+            
+            lambda_acc *= lambda;
+            final_color += lambda_acc * computeColor(closest_object, current_ray, point_of_intersection, rand_state, intersectInfo);
+            
+            normal = closest_object->getNormalAtPoint(point_of_intersection);
+            if(ifIntersectPointInside(intersectInfo)) {
+                normal *= -1;
+            }
+            // Special case for Triangular Mesh    
+            if(closest_object->getTypeID() == TMESH_TYPE_ID) {
+                normal = closest_object->getNormalAtPoint(point_of_intersection, getTriangleIDFromIntersectInfo(intersectInfo));
+            }
+
+            ray_dir = - current_ray.getDirection();
+            refl_dir = -ray_dir + 2.0f * dot(ray_dir, normal) * normal;
+            reflected_ray  = Ray(point_of_intersection, refl_dir);
+
+            // Calculating a random refracted ray for now
+            idx_refr = abs(dot(normal, current_ray.getDirection()));
+            refr_dir = -normal * idx_refr + (-ray_dir - dot(-normal, -ray_dir) *(- normal)) * (1 - idx_refr);
+            refracted_ray = Ray(point_of_intersection, refr_dir);
+
+            // current_ray = reflected_ray;
+            // current_ray = refracted_ray;
+
+            if(curand_uniform(&rand_state_pixel) > 0.5f) {
+                current_ray = reflected_ray;
+            } else {
+                current_ray = refracted_ray;
+            }
+
+        } else {
+            break;
+        }
+    }
+    rand_state = rand_state_pixel;
+    return final_color;
+}
+
+__device__ bool RenderEngine::getHitObject(Ray incoming_ray, VisibleObject*& closest_object, Vector3& extraIntersectInfo) {
     int total_objects = world->getTotalVisibleObjects();
 
     float min_t = 0.0f;
     bool if_t_encountered = false;
     Vector3 intersectInfo;
-    Vector3 extraIntersectInfo(0.0f, 0.0f, 0.0f);
-
-    VisibleObject * closest_object;
 
     for(int i = 0; i < total_objects; i++) {
         
@@ -141,33 +206,9 @@ __device__ Vector3 RenderEngine::rayTrace(Ray incoming_ray, int rec_steps, curan
 
     }
 
-    if( !if_t_encountered ) {
-        return Vector3(0.0, 0.0, 0.0); // Default color
-    }   
-    
-    Vector3 point_of_intersection = incoming_ray.getPoint(min_t);
-
-    Vector3 normal = closest_object->getNormalAtPoint(point_of_intersection);
-    // Special case for Triangular Mesh    
-    if(closest_object->getTypeID() == TMESH_TYPE_ID) {
-        normal = closest_object->getNormalAtPoint(point_of_intersection, getTriangleIDFromIntersectInfo(extraIntersectInfo));
-    }
-
-    Vector3 refl_dir = incoming_ray.getDirection() + 2.0f * dot(-incoming_ray.getDirection(), normal) * normal;
-    Ray reflected_ray  = Ray(point_of_intersection, refl_dir);
-
-    // Calculating a random refracted ray for now
-    float idx_refr = 0.6;
-    Vector3 refr_dir = -normal * idx_refr + incoming_ray.getDirection() * (1 - idx_refr);
-    Ray refracted_ray = Ray(point_of_intersection, refr_dir);     
-
-    // Gives "GPUassert: an illegal instruction was encountered" on this
-    Vector3 final_color = (computeColor(closest_object, incoming_ray, point_of_intersection, rand_state, extraIntersectInfo) + rayTrace(reflected_ray, rec_steps - 1, rand_state) + rayTrace(refracted_ray, rec_steps - 1, rand_state)) / 3;
-
-    // Works perfectly with this:
-    // Vector3 final_color = computeColor(closest_object, incoming_ray, point_of_intersection, rand_state, extraIntersectInfo);
-    return final_color;
+    return if_t_encountered; 
 }
+
 
 /*  Function: computeColor
 //
@@ -186,6 +227,9 @@ __device__ Vector3 RenderEngine::computeColor(VisibleObject* closest_object, Ray
     int total_lights = world->getTotalLights();
 
     Vector3 normal = closest_object->getNormalAtPoint(point_of_intersection);
+    if(ifIntersectPointInside(extraIntersectInfo)) {
+        normal *= -1;
+    }
 
     // Special case for Triangular Mesh    
     if(closest_object->getTypeID() == TMESH_TYPE_ID) {

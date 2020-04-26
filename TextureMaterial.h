@@ -49,7 +49,7 @@ __device__ void TextureMaterial::setColorImage(int width, int height, int channe
 }
 
 __device__ Vector3 TextureMaterial::getColorAtIndex(int x, int y) {
-    if(x < c_i_width && y < c_i_height) {
+    if(x < c_i_width - 1 && y < c_i_height - 1) {
         int index = c_i_channels * (c_i_width * y + x);
         
         // #ifdef MATERIALDEBUG
