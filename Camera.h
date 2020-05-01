@@ -44,14 +44,23 @@ class Camera
 
         float s_x, s_y; // Dimensions of the screen 
         float d; // Distance of the screen from the camera
+
+        float s_lens_x, s_lens_y; // Dimension of the lens
+        float cam_focus; // Focus  of the camera (distance of the lens from the screen)
+        Vector3 p_lens_00; // Position of the Bottom Left of the lens
         
     public:
         __host__ __device__ Camera();
         __host__ __device__ Camera(const Vector3& position, const Vector3& direction, const Vector3& up, float sx, float sy, float screen_distance);
         __host__ __device__ ~Camera();
 
+        __host__ __device__ inline void setLensSize(float sx, float sy);
+
         __host__ __device__ Ray getRay(float u, float v) const; // Get the ray corresponding the u,v cordinates on the screen
         __host__ __device__ inline Vector3 getUnitViewVector() const { return n_2; }
+
+        __host__ __device__ Vector3 getFocalPoint(float u, float v);
+        __host__  __device__ Ray getFocusRay(int x, int y, curandState& rand_state);
 };
 
 __host__ __device__ Camera::Camera() {}
@@ -68,6 +77,10 @@ __host__ __device__ Camera::Camera(const Vector3& position, const Vector3& direc
     p_c = p_e + n_2 * d; // Going to the center of the screen from the camera position in the direction of the view vector
 
     p_00 = p_c - (s_x / 2.0f) * n_0 - (s_y  / 2.0f) * n_1; // The 0,0 for the screen : Bottom Left corner
+
+    p_lens_00 = p_e - (s_lens_x / 2.0f) * n_0 - (s_lens_y / 2.0f) * n_1;
+    s_lens_x = s_x; // Setting the lens size
+    s_lens_y = s_y;
 
     #ifdef INITDEBUG
     std::cout<<"n2: "<<n_2<<std::endl;
@@ -103,4 +116,27 @@ __host__ __device__ inline Ray Camera::getRay(float u, float v) const {
     return Ray(p_e, (p_00 + (u * n_0 * s_x) + (v * n_1 * s_y)) - p_e);
 }
 
+__host__ __device__ inline void Camera::setLensSize(float sx, float sy) {
+    s_lens_x = sx;
+    s_lens_y = sy;
+
+    p_lens_00 = p_e - (s_lens_x / 2.0f) * n_0 - (s_lens_y / 2.0f) * n_1;
+}
+
+__host__ __device__ Vector3 Camera::getFocalPoint(float u, float v) {
+    Ray test_ray = Ray(p_e, (p_00 + (u * n_0 * s_x) + (v * n_1 * s_y)) - p_e);
+    return test_ray.getPoint(cam_focus);
+}
+
+__host__  __device__ Ray Camera::getFocusRay(Vector3& focal_point, int s, int n_samples, curandState& rand_state) {
+    int side = int(floor(sqrt(n_samples)));
+    int i = s % side;
+    int j = int(floor(s / side));
+
+    float x_lens = s_lens_x * (float(i) / float(side)) + curand_uniform(&rand_state) / s_lens_x;
+    float y_lens = s_lens_y * (float(j) / float(side)) + curand_uniform(&rand_state) / s_lens_y;
+
+    Vector3 start_point = p_lens_00 + (x_lens * n_0) + (y_lens * n_1);
+    return Ray(start_point, focal_point - start_point); 
+}
 #endif
