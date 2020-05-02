@@ -82,6 +82,8 @@ class RenderEngine {
         __device__ inline void setAntiAliasing(int samples) { use_antialising = true; n_samples = samples; }
 
         __device__ Vector3 renderPixelSampling(int i, int j, curandState& rand_state);
+
+        __device__ Vector3 renderPixelAdvanced(int i, int j, curandState& rand_state);
         World* world;
         Camera* camera;
 };
@@ -99,7 +101,7 @@ __device__ RenderEngine::RenderEngine(int width, int height, World& world_p) : w
     if_border = false;
     border_thinkness = 0.6;
     recursive_steps = 3;
-    iterative_ray_steps = 3;
+    iterative_ray_steps = 4;
 }
 
 __device__ RenderEngine::~RenderEngine() {}
@@ -150,6 +152,11 @@ __device__ Vector3 RenderEngine::rayTrace(Ray incoming_ray, int steps, curandSta
                 normal = closest_object->getNormalAtPoint(point_of_intersection, getTriangleIDFromIntersectInfo(intersectInfo));
             }
 
+
+            Vector3 rand_vec(curand_uniform(&rand_state_pixel), curand_uniform(&rand_state_pixel), curand_uniform(&rand_state_pixel));
+            // rand_vec.make_unit_vector();
+            rand_vec /= 0.01;
+
             ray_dir = - current_ray.getDirection();
             refl_dir = -ray_dir + 2.0f * dot(ray_dir, normal) * normal;
             reflected_ray  = Ray(point_of_intersection, refl_dir);
@@ -159,8 +166,8 @@ __device__ Vector3 RenderEngine::rayTrace(Ray incoming_ray, int steps, curandSta
             refr_dir = -normal * idx_refr + (-ray_dir - dot(-normal, -ray_dir) *(- normal)) * (1 - idx_refr);
             refracted_ray = Ray(point_of_intersection, refr_dir);
 
-            // current_ray = reflected_ray;
-            // current_ray = refracted_ray;
+            current_ray = reflected_ray;
+            current_ray = refracted_ray;
 
             if(curand_uniform(&rand_state_pixel) > 0.5f) {
                 current_ray = reflected_ray;
@@ -406,6 +413,38 @@ __device__ Vector3 RenderEngine::renderPixelSampling(int i, int j, curandState& 
         u = origin_u + curand_uniform(&rand_state_pixel)/(float(w));
         v = origin_v + curand_uniform(&rand_state_pixel)/(float(h));
         final_color += render(u, v, rand_state_pixel);
+
+        #ifdef AREALIGHTDEBUG
+            // printf("u: %f\n", u);
+        #endif
+    }
+    final_color = final_color / n_samples;
+
+    rand_state = rand_state_pixel;
+
+    return final_color;
+}
+
+
+__device__ Vector3 RenderEngine::renderPixelAdvanced(int i, int j, curandState& rand_state)  {
+    float origin_u = ((float) i)/((float) w);
+    float origin_v = ((float) h - j)/((float) h); // Pixel cordinates have the origin on top left but our screen origin is on the bottom left
+
+    float u, v;
+    curandState rand_state_pixel = rand_state;
+
+    Vector3 final_color(0.0, 0.0, 0.0);
+
+    Vector3 focal_point;
+    Ray eye_ray;
+    for(int i = 0; i < n_samples; i++) {
+        u = origin_u + 0.5f/(float(w));
+        v = origin_v + 0.5f/(float(h));
+
+        focal_point = camera->getFocalPoint(u, v);
+        eye_ray = camera->getFocusRay(focal_point, i, n_samples, rand_state);
+        
+        final_color += rayTrace(eye_ray, iterative_ray_steps, rand_state);
 
         #ifdef AREALIGHTDEBUG
             // printf("u: %f\n", u);

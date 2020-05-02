@@ -83,14 +83,14 @@ void initializeWorld(World ** world, int w, int h, unsigned char ** array_of_ima
     Vector3 center(-2.0, 0.0, 0.0);
     float r = 0.5f;
     Sphere * s = new Sphere(center, r, color);
-    // s->setMaterial(*m2);
+    s->setMaterial(*m2);
     (*world)->addVisibleObject(s);
 
     Vector3 color5(1.0f, 0.0f, 0.1f);
     Vector3 center2(0.5, 0.0, 0.0);
-    float r2 = 1.5f;
+    float r2 = 10;
     Sphere * s2 = new Sphere(center2, r2, color5);
-    // s2->setMaterial(*m1);
+    s2->setMaterial(*m1);
     (*world)->addVisibleObject(s2);
 
     float beam_angle = 40.0;
@@ -119,14 +119,14 @@ void initializeWorld(World ** world, int w, int h, unsigned char ** array_of_ima
     Vector3 normal(0, 1.0, 0.0);
     Plane * p = new Plane(normal, point, color2);
     // p->setMaterial(*m3);
-    (*world)->addVisibleObject(p);
+    // (*world)->addVisibleObject(p);
 
     Vector3 color3(0.1f, 0.2f, 0.8f);
     Vector3 point2(4.5, 0.0, 0.0);
     Vector3 normal2(-1.0, 0.0, 0.0f);
     Plane * p2 = new Plane(normal2, point2, color3);
     // p2->setMaterial(*m3);
-    (*world)->addVisibleObject(p2);
+    // (*world)->addVisibleObject(p2);
 
     Vector3 positioncam(-2.0, 0.0, 3.0);
     Vector3 lookat(0.0f, 0.0f, 0.0f);
@@ -135,6 +135,8 @@ void initializeWorld(World ** world, int w, int h, unsigned char ** array_of_ima
     float aspect_ratio = (float(w))/(float(h));
     float distance_from_screen = 0.70;
     Camera * cam = new Camera(positioncam, direction, updir, aspect_ratio, 1.0, distance_from_screen);
+    cam->setLensSize(0.3, 0.3);
+    cam->setFocus(4);
     (*world)->setCamera(*cam);
 }
 
@@ -180,6 +182,14 @@ void addMeshToWorld(World ** world, Vector3 * mesh_vertex_data, Vector3 * mesh_n
     // (*world)->addVisibleObject(t_mesh);
 }
 
+__global__
+void updateWorldObjects(World ** world) {
+    int total_objects = (*world)->getTotalVisibleObjects();
+
+    for(int i = 0; i < total_objects; i++) {
+        ((*world)->getVisibleObject(i))->update();
+    }
+}
 
 /*  Function: Parallelize Render for each pixels
 //
@@ -202,11 +212,29 @@ void renderPixels(RenderEngine ** r_engine, Vector3 * frame_buffer, curandState 
 
     curand_init(1984 + index_ij, 0, 0, &rand_sequence[index_ij]);
 
-    frame_buffer[index_ij] =  (*r_engine)->renderPixelSampling(i, j, rand_sequence[index_ij]);
+    frame_buffer[index_ij] +=  (*r_engine)->renderPixelSampling(i, j, rand_sequence[index_ij]);
     #ifdef CUDADEBUG
     printf("End of renderPixels\n");
     printf("framebuffer: i: %d r: %d c: %d\n", index_ij, i, j);
     #endif
+}
+
+__global__
+void initializeFrameBuffer(Vector3 * frame_buffer, int w, int h) {
+    const int i = blockIdx.x * blockDim.x + threadIdx.x;
+    const int j = blockIdx.y * blockDim.y + threadIdx.y;
+    const int index_ij = j * w + i;
+
+    frame_buffer[index_ij] = Vector3(0.0f, 0.0f, 0.0f);
+}
+
+__global__
+void normalizeFrameBuffer(Vector3 * frame_buffer, int w, int h, float n) {
+    const int i = blockIdx.x * blockDim.x + threadIdx.x;
+    const int j = blockIdx.y * blockDim.y + threadIdx.y;
+    const int index_ij = j * w + i;
+
+    frame_buffer[index_ij] /= n;
 }
 
 
@@ -278,7 +306,7 @@ int main(int argc, char *argv[]) {
     // Creating the required arrays for starting the rendering sequence
     int wid_cuda = 1200, hgt_cuda = 800;
 
-    int samples = 64;
+    int samples = 16;
 
     Vector3 * frame_buffer_cuda;
     gpuErrchk(cudaMallocManaged(&frame_buffer_cuda, wid_cuda * hgt_cuda * sizeof(Vector3)));
@@ -317,9 +345,25 @@ int main(int argc, char *argv[]) {
     std::cout<<"Block Sizes: "<<block_size_side<<" "<<block_size_side<<std::endl;
     #endif
 
+    initializeFrameBuffer<<<grid_size, block_size>>>(frame_buffer_cuda, wid_cuda, hgt_cuda);
+    gpuErrchk(cudaPeekAtLastError());
+    gpuErrchk(cudaDeviceSynchronize());
+
     renderPixels<<<grid_size, block_size>>>(r_engine_cuda, frame_buffer_cuda, rand_sequence, wid_cuda, hgt_cuda);
     gpuErrchk(cudaPeekAtLastError());
     gpuErrchk(cudaDeviceSynchronize());
+
+    // updateWorldObjects<<<1, 1>>>(world_cuda);
+    // gpuErrchk(cudaPeekAtLastError());
+    // gpuErrchk(cudaDeviceSynchronize());
+
+    // renderPixels<<<grid_size, block_size>>>(r_engine_cuda, frame_buffer_cuda, rand_sequence, wid_cuda, hgt_cuda);
+    // gpuErrchk(cudaPeekAtLastError());
+    // gpuErrchk(cudaDeviceSynchronize());
+
+    // normalizeFrameBuffer<<<grid_size, block_size>>>(frame_buffer_cuda, wid_cuda, hgt_cuda, 2);
+    // gpuErrchk(cudaPeekAtLastError());
+    // gpuErrchk(cudaDeviceSynchronize());    
 
     makeImage(frame_buffer_cuda, wid_cuda, hgt_cuda);
 

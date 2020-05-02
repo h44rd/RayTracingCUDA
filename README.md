@@ -5,6 +5,12 @@
 ### Latest Render
 ![Lastest Render](out.jpg)
 
+### Focus Blur
+![Blur](outputs/focus_blur.jpg)
+
+### Motion Blur
+![Blur](outputs/motion_blur.jpg)
+
 ### Reflection and Refraction
 ![Reflection and Refraction](outputs/refl_refr_colors.jpg)
 ![Reflection and Refraction](outputs/refl_refr.jpg)

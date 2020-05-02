@@ -29,9 +29,9 @@
 
 class Sphere : public VisibleObject {
     private:
-        float r;
-        Vector3 p_c;
-        Vector3 c_0;
+        float r; // Radius
+        Vector3 p_c; // Center 
+        Vector3 c_0; // Color
 
     public:
         __host__ __device__ Sphere();
@@ -48,6 +48,8 @@ class Sphere : public VisibleObject {
         __device__ Vector3 getColor(Vector3& point) const;
 
         __device__ __host__ int getTypeID() { return SPHERE_TYPE_ID; }
+
+        __device__ void update();
 };
 
 __host__ __device__ Sphere::Sphere() {}
@@ -130,5 +132,9 @@ __device__ Vector3 Sphere::getColor(Vector3& point) const {
         return m->getBilinearColor(u, v);
     }
     return c_0;
+}
+
+__device__ void Sphere::update() {
+    p_c += Vector3(0.0f, 0.1f, 0.0f);
 }
 #endif

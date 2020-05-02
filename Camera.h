@@ -18,6 +18,8 @@
 #ifndef CAMERAH
 #define CAMERAH
 
+#include<math.h>
+
 #include "Vector3.h"
 #include "Ray.h"
 
@@ -54,13 +56,14 @@ class Camera
         __host__ __device__ Camera(const Vector3& position, const Vector3& direction, const Vector3& up, float sx, float sy, float screen_distance);
         __host__ __device__ ~Camera();
 
-        __host__ __device__ inline void setLensSize(float sx, float sy);
+        __host__ __device__ void setLensSize(float sx, float sy);
+        __host__ __device__ void setFocus(float focus) { cam_focus = focus; }
 
         __host__ __device__ Ray getRay(float u, float v) const; // Get the ray corresponding the u,v cordinates on the screen
         __host__ __device__ inline Vector3 getUnitViewVector() const { return n_2; }
 
         __host__ __device__ Vector3 getFocalPoint(float u, float v);
-        __host__  __device__ Ray getFocusRay(int x, int y, curandState& rand_state);
+        __device__ Ray getFocusRay(Vector3& focal_point, int s, int n_samples, curandState& rand_state);
 };
 
 __host__ __device__ Camera::Camera() {}
@@ -81,6 +84,8 @@ __host__ __device__ Camera::Camera(const Vector3& position, const Vector3& direc
     p_lens_00 = p_e - (s_lens_x / 2.0f) * n_0 - (s_lens_y / 2.0f) * n_1;
     s_lens_x = s_x; // Setting the lens size
     s_lens_y = s_y;
+
+    cam_focus = 5.0f;
 
     #ifdef INITDEBUG
     std::cout<<"n2: "<<n_2<<std::endl;
@@ -128,10 +133,10 @@ __host__ __device__ Vector3 Camera::getFocalPoint(float u, float v) {
     return test_ray.getPoint(cam_focus);
 }
 
-__host__  __device__ Ray Camera::getFocusRay(Vector3& focal_point, int s, int n_samples, curandState& rand_state) {
-    int side = int(floor(sqrt(n_samples)));
+__device__ Ray Camera::getFocusRay(Vector3& focal_point, int s, int n_samples, curandState& rand_state) {
+    int side = int(floor(sqrt((float) n_samples)));
     int i = s % side;
-    int j = int(floor(s / side));
+    int j = int(floor(((float) s) / ((float) side)));
 
     float x_lens = s_lens_x * (float(i) / float(side)) + curand_uniform(&rand_state) / s_lens_x;
     float y_lens = s_lens_y * (float(j) / float(side)) + curand_uniform(&rand_state) / s_lens_y;
