@@ -49,7 +49,7 @@ class Sphere : public VisibleObject {
 
         __device__ __host__ int getTypeID() { return SPHERE_TYPE_ID; }
 
-        __device__ void update();
+        __device__ void update(float t);
 };
 
 __host__ __device__ Sphere::Sphere() {}
@@ -134,7 +134,7 @@ __device__ Vector3 Sphere::getColor(Vector3& point) const {
     return c_0;
 }
 
-__device__ void Sphere::update() {
-    p_c += Vector3(0.0f, 0.1f, 0.0f);
+__device__ void Sphere::update(float t) {
+    p_c = rotateAroundAxis(p_c, 2.0f * PI / 180.0f, Vector3(0.0f, 1.0f, 0.0f));
 }
 #endif

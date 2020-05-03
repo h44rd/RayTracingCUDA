@@ -81,8 +81,19 @@ void initializeWorld(World ** world, int w, int h, unsigned char ** array_of_ima
 
     Vector3 color(0.3f, 0.8f, 0.3f);
     Vector3 center(-2.0, 0.0, 0.0);
+    center = rotateAroundAxis(center, 40.0 * PI / 180.0, Vector3(0.0f, 1.0f, 0.0f));
     float r = 0.5f;
     Sphere * s = new Sphere(center, r, color);
+    s->setMaterial(*m2);
+    (*world)->addVisibleObject(s);
+
+    center = rotateAroundAxis(center, 120.0 * PI / 180.0, Vector3(0.0f, 1.0f, 0.0f));
+    s = new Sphere(center, r, color);
+    s->setMaterial(*m2);
+    (*world)->addVisibleObject(s);
+
+    center = rotateAroundAxis(center, 120.0 * PI / 180.0, Vector3(0.0f, 1.0f, 0.0f));
+    s = new Sphere(center, r, color);
     s->setMaterial(*m2);
     (*world)->addVisibleObject(s);
 
@@ -97,7 +108,7 @@ void initializeWorld(World ** world, int w, int h, unsigned char ** array_of_ima
     float falloff_angle = 10.0;
     beam_angle = beam_angle * PI / 180.0;
     falloff_angle = falloff_angle * PI / 180.0;
-    Vector3 spotlightpos(-3.0, 3.0, 0.0f);
+    Vector3 spotlightpos(0.0, 3.0, 0.0f);
     Vector3 spotlightdir = - spotlightpos;
     SpotLight * spotlight = new SpotLight(spotlightpos, spotlightdir, beam_angle, falloff_angle);
     (*world)->addLight(spotlight);
@@ -105,7 +116,7 @@ void initializeWorld(World ** world, int w, int h, unsigned char ** array_of_ima
     Vector3 spotlightpos2(1.0f, 3.0, 4.0);
     Vector3 spotlightdir2 = - spotlightpos2;
     SpotLight * spotlight2 = new SpotLight(spotlightpos2, spotlightdir2, beam_angle, falloff_angle);
-    (*world)->addLight(spotlight2);
+    // (*world)->addLight(spotlight2);
 
     Vector3 area_light_pos(-4.0, 2.0, 0);
     Vector3 area_light_dir = - area_light_pos;
@@ -114,12 +125,12 @@ void initializeWorld(World ** world, int w, int h, unsigned char ** array_of_ima
     // (*world)->addLight(areaLigth);
 
 
-    Vector3 color2(0.5f, 1.0f, 0.25f);
+    Vector3 color2(213.0f / 255.99f, 241.00f / 255.99f, 11.0f / 255.99f); // 52, 235, 140
     Vector3 point(0.0, -2.5, 0.0);
     Vector3 normal(0, 1.0, 0.0);
     Plane * p = new Plane(normal, point, color2);
     // p->setMaterial(*m3);
-    // (*world)->addVisibleObject(p);
+    (*world)->addVisibleObject(p);
 
     Vector3 color3(0.1f, 0.2f, 0.8f);
     Vector3 point2(4.5, 0.0, 0.0);
@@ -128,7 +139,7 @@ void initializeWorld(World ** world, int w, int h, unsigned char ** array_of_ima
     // p2->setMaterial(*m3);
     // (*world)->addVisibleObject(p2);
 
-    Vector3 positioncam(-2.0, 0.0, 3.0);
+    Vector3 positioncam(-2.0, 1.0, 5.0);
     Vector3 lookat(0.0f, 0.0f, 0.0f);
     Vector3 direction = lookat - positioncam;
     Vector3 updir(0.0, 1.0, 0.0);
@@ -179,15 +190,15 @@ void addMeshToWorld(World ** world, Vector3 * mesh_vertex_data, Vector3 * mesh_n
 
     TriangularMesh * t_mesh = new TriangularMesh(center, color, mesh_vertex_data, mesh_normal_data, no_of_triangles);
     t_mesh->setMaterial(*m1);
-    // (*world)->addVisibleObject(t_mesh);
+    (*world)->addVisibleObject(t_mesh);
 }
 
 __global__
-void updateWorldObjects(World ** world) {
+void updateWorldObjects(World ** world, int t) {
     int total_objects = (*world)->getTotalVisibleObjects();
 
     for(int i = 0; i < total_objects; i++) {
-        ((*world)->getVisibleObject(i))->update();
+        ((*world)->getVisibleObject(i))->update(t);
     }
 }
 
@@ -299,12 +310,12 @@ int main(int argc, char *argv[]) {
     gpuErrchk(cudaMallocManaged(&mesh_vertex_data, sizeof(Vector3 *)));
     gpuErrchk(cudaMallocManaged(&mesh_normal_data, sizeof(Vector3 *)));
     
-    std::string obj_file_name = "models/cube.obj";
+    std::string obj_file_name = "models/tetrahedron.obj";
     int no_of_triangles = loadOBJ(obj_file_name, mesh_vertex_data, mesh_normal_data);
 
 
     // Creating the required arrays for starting the rendering sequence
-    int wid_cuda = 1200, hgt_cuda = 800;
+    int wid_cuda = 1920, hgt_cuda = 1080;
 
     int samples = 16;
 
@@ -345,13 +356,13 @@ int main(int argc, char *argv[]) {
     std::cout<<"Block Sizes: "<<block_size_side<<" "<<block_size_side<<std::endl;
     #endif
 
-    initializeFrameBuffer<<<grid_size, block_size>>>(frame_buffer_cuda, wid_cuda, hgt_cuda);
-    gpuErrchk(cudaPeekAtLastError());
-    gpuErrchk(cudaDeviceSynchronize());
+    // initializeFrameBuffer<<<grid_size, block_size>>>(frame_buffer_cuda, wid_cuda, hgt_cuda);
+    // gpuErrchk(cudaPeekAtLastError());
+    // gpuErrchk(cudaDeviceSynchronize());
 
-    renderPixels<<<grid_size, block_size>>>(r_engine_cuda, frame_buffer_cuda, rand_sequence, wid_cuda, hgt_cuda);
-    gpuErrchk(cudaPeekAtLastError());
-    gpuErrchk(cudaDeviceSynchronize());
+    // renderPixels<<<grid_size, block_size>>>(r_engine_cuda, frame_buffer_cuda, rand_sequence, wid_cuda, hgt_cuda);
+    // gpuErrchk(cudaPeekAtLastError());
+    // gpuErrchk(cudaDeviceSynchronize());
 
     // updateWorldObjects<<<1, 1>>>(world_cuda);
     // gpuErrchk(cudaPeekAtLastError());
@@ -365,7 +376,22 @@ int main(int argc, char *argv[]) {
     // gpuErrchk(cudaPeekAtLastError());
     // gpuErrchk(cudaDeviceSynchronize());    
 
-    makeImage(frame_buffer_cuda, wid_cuda, hgt_cuda);
+    int total_frames = 60;
+    for(int t = 0; t < total_frames; t++) {
+        initializeFrameBuffer<<<grid_size, block_size>>>(frame_buffer_cuda, wid_cuda, hgt_cuda);
+        gpuErrchk(cudaPeekAtLastError());
+        gpuErrchk(cudaDeviceSynchronize());
+
+        updateWorldObjects<<<1, 1>>>(world_cuda, float(t));
+        gpuErrchk(cudaPeekAtLastError());
+        gpuErrchk(cudaDeviceSynchronize());
+
+        renderPixels<<<grid_size, block_size>>>(r_engine_cuda, frame_buffer_cuda, rand_sequence, wid_cuda, hgt_cuda);
+        gpuErrchk(cudaPeekAtLastError());
+        gpuErrchk(cudaDeviceSynchronize());
+
+        makeImage(frame_buffer_cuda, wid_cuda, hgt_cuda, "video/video4/out" + std::to_string(t) + ".ppm" );
+    }
 
     return 0;
 }

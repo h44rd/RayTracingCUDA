@@ -3,6 +3,9 @@
 
 #define TINYOBJLOADER_IMPLEMENTATION // define this in only *one* .cc
 #include "libs/tiny_obj_loader.h"
+#include <math.h>
+#include <iostream>
+#include <fstream>
 
 #define PI 3.1415927
 #define EPSILON 0.0000001 // A very small number
@@ -21,6 +24,7 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
    }
 }
 
+__host__ __device__ Vector3 rotateAroundAxis(Vector3 n, float theta, Vector3 u);
 __host__ __device__ float clamp(float x, float high, float low);
 __host__ __device__ float smoothstep(float edge0, float edge1, float x);
 __host__ void makeImage(Vector3 * frame_buffer, int w, int h);
@@ -42,10 +46,14 @@ __host__ __device__ inline bool ifRayIntersected(const Vector3& intersectInfo) {
 
 __host__ __device__ inline float getTFromIntersectInfo(const Vector3& intersectInfo) { return intersectInfo[0]; }
 
-__host__ void makeImage(Vector3 * frame_buffer, int w, int h) {
+__host__ void makeImage(Vector3 * frame_buffer, int w, int h, std::string file_name) {
+
+    std::ofstream output_file;
+    output_file.open(file_name.c_str(), std::ios::app);
+
     // Output Pixel as Image
     #ifdef ACTUALRENDER
-    std::cout << "P3\n" << w << " " << h << "\n255\n";
+    output_file << "P3\n" << w << " " << h << "\n255\n";
     #endif
 
     int index_ij;
@@ -73,7 +81,7 @@ __host__ void makeImage(Vector3 * frame_buffer, int w, int h) {
                 ib = 0;
             }
             #ifdef ACTUALRENDER
-            std::cout << ir << " " << ig << " " << ib << "\n";
+            output_file << ir << " " << ig << " " << ib << "\n";
             #endif
         }
     }
@@ -172,4 +180,11 @@ int loadOBJ(std::string  file_name, Vector3 ** vertex_data, Vector3 ** normal_da
     return int(total_traingles_verts / 3);
 }
 
+__host__ __device__ Vector3 rotateAroundAxis(Vector3 n, float theta, Vector3 u) {
+    Vector3 r1(cos(theta) + u.x() * u.x() * (1 - cos(theta)), u.x() * u.y() * (1 - cos(theta)) - u.z() * sin(theta), u.x() * u.z() * (1 - cos(theta)) + u.y() * sin(theta));
+    Vector3 r2(u.y() * u.x() * (1 - cos(theta)) + u.z() * sin(theta), cos(theta) + u.y() * u.y() * (1 - cos(theta)), u.y() * u.z() * (1 - cos(theta)) - u.x() * sin(theta));
+    Vector3 r3(u.z() * u.x() * (1 - cos(theta)) - u.y() * sin(theta), u.z() * u.y() * (1 - cos(theta)) + u.x() * sin(theta), cos(theta) + u.z() * u.z() * (1 - cos(theta)));
+
+    return Vector3(dot(r1, n), dot(r2, n), dot(r3, n));
+}
 #endif

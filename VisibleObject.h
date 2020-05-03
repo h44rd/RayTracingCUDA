@@ -51,7 +51,7 @@ class VisibleObject
         __host__ __device__ virtual Vector3 getNormalAtPoint(Vector3& point, int id_triangle) const { return Vector3(0.0f, 0.0f, 0.0f); };
         __device__ virtual Vector3 getColor(Vector3& point, int id_triangle) const { return Vector3(0.0f, 0.0f, 0.0f); };
 
-        __device__ virtual void update();
+        __device__ virtual void update(float t);
 
     protected:
         Material * m = NULL; // Material of the object
@@ -65,6 +65,6 @@ __host__ __device__ Vector3 VisibleObject::getNormalAtPoint(Vector3& point) cons
 
 __device__ Vector3 VisibleObject::getColor(Vector3& point) const { return Vector3(0.0f, 0.0f, 0.0f); }
 
-__device__ void VisibleObject::update() {}
+__device__ void VisibleObject::update(float t) {}
 
 #endif
